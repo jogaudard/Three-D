@@ -110,7 +110,7 @@ co2_cut <- co2_cut %>% mutate(
     fluxID == 25 & datetime %in% c(ymd_hms("2021-06-04T14:23:30"):ymd_hms("2021-06-04T14:23:50")) ~ "cut",
     fluxID == 26 & datetime %in% c(ymd_hms("2021-06-04T14:17:23"):ymd_hms("2021-06-04T14:17:30")) ~ "cut",
     fluxID == 248 & datetime %in% c(ymd_hms("2021-06-22T14:19:45"):ymd_hms("2021-06-22T14:19:55")) ~ "cut",
-    # fluxID ==  & datetime %in%  ~ "cut",
+    fluxID == 988 & datetime %in% c(ymd_hms("2021-08-19T10:57:00"):ymd_hms("2021-08-19T10:57:20")) ~ "cut",
     # fluxID ==  & datetime %in%  ~ "cut",
     # fluxID ==  & datetime %in%  ~ "cut",
     TRUE ~ "keep"
@@ -128,7 +128,7 @@ co2_cut <- co2_cut %>% mutate(
 
 theme_set(theme_grey(base_size = 5)) 
 
-filter(co2_cut, campaign == 1) %>% 
+filter(co2_cut, campaign == 1) %>% #cleaned!
   ggplot(aes(x = datetime, y = CO2, color = cut)) +
   geom_line(size = 0.2, aes(group = fluxID)) +
   scale_x_datetime(date_breaks = "1 min", minor_breaks = "10 sec", date_labels = "%e/%m \n %H:%M") +
@@ -136,7 +136,7 @@ filter(co2_cut, campaign == 1) %>%
   facet_wrap(vars(fluxID), ncol = 30, scales = "free") +
   ggsave("threed_2021_detail_1.png", height = 40, width = 80, units = "cm")
 
-filter(co2_cut, campaign == 2) %>% 
+filter(co2_cut, campaign == 2) %>% #cleaned!
   ggplot(aes(x = datetime, y = CO2, color = cut)) +
   geom_line(size = 0.2, aes(group = fluxID)) +
   scale_x_datetime(date_breaks = "1 min", minor_breaks = "10 sec", date_labels = "%e/%m \n %H:%M") +
@@ -144,7 +144,21 @@ filter(co2_cut, campaign == 2) %>%
   facet_wrap(vars(fluxID), ncol = 30, scales = "free") +
   ggsave("threed_2021_detail_2.png", height = 40, width = 80, units = "cm")
 
+filter(co2_cut, campaign == 3) %>% #cleaned!
+  ggplot(aes(x = datetime, y = CO2, color = cut)) +
+  geom_line(size = 0.2, aes(group = fluxID)) +
+  scale_x_datetime(date_breaks = "1 min", minor_breaks = "10 sec", date_labels = "%e/%m \n %H:%M") +
+  # scale_x_date(date_labels = "%H:%M:%S") +
+  facet_wrap(vars(fluxID), ncol = 30, scales = "free") +
+  ggsave("threed_2021_detail_3.png", height = 40, width = 80, units = "cm")
 
+filter(co2_cut, campaign == 4) %>% 
+  ggplot(aes(x = datetime, y = CO2, color = cut)) +
+  geom_line(size = 0.2, aes(group = fluxID)) +
+  scale_x_datetime(date_breaks = "1 min", minor_breaks = "10 sec", date_labels = "%e/%m \n %H:%M") +
+  # scale_x_date(date_labels = "%H:%M:%S") +
+  facet_wrap(vars(fluxID), ncol = 30, scales = "free") +
+  ggsave("threed_2021_detail_4.png", height = 40, width = 80, units = "cm")
 
 #Is there a more automated way to do one file per campaign??
 
