@@ -111,6 +111,7 @@ co2_cut <- co2_cut %>% mutate(
     fluxID == 26 & datetime %in% c(ymd_hms("2021-06-04T14:17:23"):ymd_hms("2021-06-04T14:17:30")) ~ "cut",
     fluxID == 248 & datetime %in% c(ymd_hms("2021-06-22T14:19:45"):ymd_hms("2021-06-22T14:19:55")) ~ "cut",
     fluxID == 988 & datetime %in% c(ymd_hms("2021-08-19T10:57:00"):ymd_hms("2021-08-19T10:57:20")) ~ "cut",
+    fluxID == 1244 & datetime %in% c(ymd_hms("2021-09-08T14:06:30"):ymd_hms("2021-09-08T14:07:00")) ~ "cut",
     # fluxID ==  & datetime %in%  ~ "cut",
     # fluxID ==  & datetime %in%  ~ "cut",
     TRUE ~ "keep"
@@ -152,7 +153,7 @@ filter(co2_cut, campaign == 3) %>% #cleaned!
   facet_wrap(vars(fluxID), ncol = 30, scales = "free") +
   ggsave("threed_2021_detail_3.png", height = 40, width = 80, units = "cm")
 
-filter(co2_cut, campaign == 4) %>% 
+filter(co2_cut, campaign == 4) %>% #cleaned!
   ggplot(aes(x = datetime, y = CO2, color = cut)) +
   geom_line(size = 0.2, aes(group = fluxID)) +
   scale_x_datetime(date_breaks = "1 min", minor_breaks = "10 sec", date_labels = "%e/%m \n %H:%M") +
@@ -162,52 +163,12 @@ filter(co2_cut, campaign == 4) %>%
 
 #Is there a more automated way to do one file per campaign??
 
-# co2_cut <- filter(co2_cut, cut == "keep") #to keep only the part we want to keep
+co2_cut <- filter(co2_cut, cut == "keep") #to keep only the part we want to keep
 
 #need to clean PAR, temp_air, temp_soil
 
 #temp_air and temp_soil: graph after the cleaning of CO2 and check if data are "normal"
 #put NA for when the soil temp sensor was not pluged in
-filter(co2_cut, campaign == 1) %>% 
-  ggplot(aes(x = datetime, y = temp_air)) +
-    geom_line(size = 0.2, aes(group = fluxID)) +
-    scale_x_datetime(date_breaks = "1 min", minor_breaks = "10 sec", date_labels = "%e/%m \n %H:%M") +
-    # scale_x_date(date_labels = "%H:%M:%S") +
-    facet_wrap(vars(fluxID), ncol = 30, scales = "free") +
-    ggsave("threed_2021_detail_tempair_1.png", height = 40, width = 80, units = "cm")
-
-filter(co2_cut, campaign == 2) %>% 
-  ggplot(aes(x = datetime, y = temp_air)) +
-  geom_line(size = 0.2, aes(group = fluxID)) +
-  scale_x_datetime(date_breaks = "1 min", minor_breaks = "10 sec", date_labels = "%e/%m \n %H:%M") +
-  # scale_x_date(date_labels = "%H:%M:%S") +
-  facet_wrap(vars(fluxID), ncol = 30, scales = "free") +
-  ggsave("threed_2021_detail_tempair_2.png", height = 40, width = 80, units = "cm")
-
-filter(co2_cut, campaign == 1) %>% 
-  ggplot(aes(x = datetime, y = temp_soil)) +
-  geom_line(size = 0.2, aes(group = fluxID)) +
-  scale_x_datetime(date_breaks = "1 min", minor_breaks = "10 sec", date_labels = "%e/%m \n %H:%M") +
-  # scale_x_date(date_labels = "%H:%M:%S") +
-  facet_wrap(vars(fluxID), ncol = 30, scales = "free") +
-  ggsave("threed_2021_detail_tempsoil_1.png", height = 40, width = 80, units = "cm")
-
-filter(co2_cut, campaign == 2) %>% 
-  ggplot(aes(x = datetime, y = temp_soil)) +
-  geom_line(size = 0.2, aes(group = fluxID)) +
-  scale_x_datetime(date_breaks = "1 min", minor_breaks = "10 sec", date_labels = "%e/%m \n %H:%M") +
-  # scale_x_date(date_labels = "%H:%M:%S") +
-  facet_wrap(vars(fluxID), ncol = 30, scales = "free") +
-  ggsave("threed_2021_detail_tempsoil_2.png", height = 40, width = 80, units = "cm")
-
-# ggplot(co2_cut, aes(x = datetime, y = temp_soil)) +
-#   geom_line(size = 0.2, aes(group = ID)) +
-#   scale_x_datetime(date_breaks = "1 min", minor_breaks = "10 sec", date_labels = "%e/%m \n %H:%M") +
-#   # scale_x_date(date_labels = "%H:%M:%S") +
-#   facet_wrap(vars(ID), ncol = 40, scales = "free") +
-#   ggsave("threed_2021_detail_tempsoil.png", height = 60, width = 126, units = "cm")
-
-
 
 co2_cut <- co2_cut %>% 
   mutate(
@@ -220,6 +181,82 @@ co2_cut <- co2_cut %>%
   )
 
 
+filter(co2_cut, campaign == 1) %>% #clean
+  ggplot(aes(x = datetime, y = temp_air)) +
+    geom_line(size = 0.2, aes(group = fluxID)) +
+    scale_x_datetime(date_breaks = "1 min", minor_breaks = "10 sec", date_labels = "%e/%m \n %H:%M") +
+    # scale_x_date(date_labels = "%H:%M:%S") +
+    facet_wrap(vars(fluxID), ncol = 30, scales = "free") +
+    ggsave("threed_2021_detail_tempair_1.png", height = 40, width = 80, units = "cm")
+
+filter(co2_cut, campaign == 2) %>% #clean
+  ggplot(aes(x = datetime, y = temp_air)) +
+  geom_line(size = 0.2, aes(group = fluxID)) +
+  scale_x_datetime(date_breaks = "1 min", minor_breaks = "10 sec", date_labels = "%e/%m \n %H:%M") +
+  # scale_x_date(date_labels = "%H:%M:%S") +
+  facet_wrap(vars(fluxID), ncol = 30, scales = "free") +
+  ggsave("threed_2021_detail_tempair_2.png", height = 40, width = 80, units = "cm")
+
+filter(co2_cut, campaign == 3) %>% #clean
+  ggplot(aes(x = datetime, y = temp_air)) +
+  geom_line(size = 0.2, aes(group = fluxID)) +
+  scale_x_datetime(date_breaks = "1 min", minor_breaks = "10 sec", date_labels = "%e/%m \n %H:%M") +
+  # scale_x_date(date_labels = "%H:%M:%S") +
+  facet_wrap(vars(fluxID), ncol = 30, scales = "free") +
+  ggsave("threed_2021_detail_tempair_3.png", height = 40, width = 80, units = "cm")
+
+filter(co2_cut, campaign == 4) %>% #cleaned
+  ggplot(aes(x = datetime, y = temp_air)) +
+  geom_line(size = 0.2, aes(group = fluxID)) +
+  scale_x_datetime(date_breaks = "1 min", minor_breaks = "10 sec", date_labels = "%e/%m \n %H:%M") +
+  # scale_x_date(date_labels = "%H:%M:%S") +
+  facet_wrap(vars(fluxID), ncol = 30, scales = "free") +
+  ggsave("threed_2021_detail_tempair_4.png", height = 40, width = 80, units = "cm")
+
+filter(co2_cut, campaign == 1) %>% #cleaned
+  ggplot(aes(x = datetime, y = temp_soil)) +
+  geom_line(size = 0.2, aes(group = fluxID)) +
+  scale_x_datetime(date_breaks = "1 min", minor_breaks = "10 sec", date_labels = "%e/%m \n %H:%M") +
+  # scale_x_date(date_labels = "%H:%M:%S") +
+  facet_wrap(vars(fluxID), ncol = 30, scales = "free") +
+  ggsave("threed_2021_detail_tempsoil_1.png", height = 40, width = 80, units = "cm")
+
+filter(co2_cut, campaign == 2) %>% #cleaned
+  ggplot(aes(x = datetime, y = temp_soil)) +
+  geom_line(size = 0.2, aes(group = fluxID)) +
+  scale_x_datetime(date_breaks = "1 min", minor_breaks = "10 sec", date_labels = "%e/%m \n %H:%M") +
+  # scale_x_date(date_labels = "%H:%M:%S") +
+  facet_wrap(vars(fluxID), ncol = 30, scales = "free") +
+  ggsave("threed_2021_detail_tempsoil_2.png", height = 40, width = 80, units = "cm")
+
+filter(co2_cut, campaign == 3) %>% #cleaned
+  ggplot(aes(x = datetime, y = temp_soil)) +
+  geom_line(size = 0.2, aes(group = fluxID)) +
+  scale_x_datetime(date_breaks = "1 min", minor_breaks = "10 sec", date_labels = "%e/%m \n %H:%M") +
+  # scale_x_date(date_labels = "%H:%M:%S") +
+  facet_wrap(vars(fluxID), ncol = 30, scales = "free") +
+  ggsave("threed_2021_detail_tempsoil_3.png", height = 40, width = 80, units = "cm")
+
+filter(co2_cut, campaign == 4) %>% #cleaned
+  ggplot(aes(x = datetime, y = temp_soil)) +
+  geom_line(size = 0.2, aes(group = fluxID)) +
+  scale_x_datetime(date_breaks = "1 min", minor_breaks = "10 sec", date_labels = "%e/%m \n %H:%M") +
+  # scale_x_date(date_labels = "%H:%M:%S") +
+  facet_wrap(vars(fluxID), ncol = 30, scales = "free") +
+  ggsave("threed_2021_detail_tempsoil_4.png", height = 40, width = 80, units = "cm")
+
+# ggplot(co2_cut, aes(x = datetime, y = temp_soil)) +
+#   geom_line(size = 0.2, aes(group = ID)) +
+#   scale_x_datetime(date_breaks = "1 min", minor_breaks = "10 sec", date_labels = "%e/%m \n %H:%M") +
+#   # scale_x_date(date_labels = "%H:%M:%S") +
+#   facet_wrap(vars(ID), ncol = 40, scales = "free") +
+#   ggsave("threed_2021_detail_tempsoil.png", height = 60, width = 126, units = "cm")
+
+
+
+
+
+
 #PAR: same + NA for soilR and ER
 
 co2_cut <- co2_cut %>% 
@@ -227,13 +264,54 @@ co2_cut <- co2_cut %>%
     PAR = case_when(
       # type == "ER" ~ NA_real_, #no PAR for ecosystem respiration (but maybe I should keep it??)
       type == "SoilR" ~ NA_real_, #no PAR with soil respiration, the sensor was somewhere else anyway
-      # datetime %in% c(ymd_hms("2020-08-02T12:12:35"):ymd_hms("2020-08-02T12:12:38")) # for when the sensor messed up because of the heat (should see a drop close to 0 or negative values)
+      fluxID == 33 & datetime <= ymd_hms("2021-06-04T14:43:21") ~ NA_real_, # for when the sensor messed up because of the heat (should see a drop close to 0 or negative values)
+      # datetime %in% c(ymd_hms(""):ymd_hms("")), # for when the sensor messed up because of the heat (should see a drop close to 0 or negative values)
+      fluxID %in% c(
+        2,
+        6,
+        14,
+        16,
+        18,
+        31,
+        33,
+        39,
+        41,
+        57,
+        59,
+        69,
+        71,
+        74,
+        76,
+        89,
+        145,
+        147,
+        149,
+        400
+      )
+      
+      ~ NA_real_,
+      # fluxID == c(2, 6, 14, 16, 18, 31, 33, 39, 41, 57, 59, 69, 71, 74, 76, 89, 145, 147, 149) ~ NA_real_,
+      # datetime %in% c(ymd_hms("2021-06-05T10:37:55"):ymd_hms("2021")) ~ NA_real_,
+      fluxID == 67 & datetime >= ymd_hms("2021-06-05T10:37:55") ~ NA_real_,
+      fluxID == 209 & datetime <= ymd_hms("2021-06-21T12:12:57") ~ NA_real_,
+      fluxID == 209 & datetime >= ymd_hms("2021-06-21T12:13:07") ~ NA_real_,
+      datetime %in% c(ymd_hms("2021-06-23T14:36:20"):ymd_hms("2021-06-23T14:36:40")) ~ NA_real_,
+      fluxID == 289 & datetime <= ymd_hms("2021-06-23T14:45:35") ~ NA_real_,
+      fluxID == 289 & datetime >= ymd_hms("2021-06-23T14:46:00") ~ NA_real_,
+      datetime %in% c(ymd_hms("2021-06-23T14:46:50"):ymd_hms("2021-06-23T14:47:10")) ~ NA_real_,
+      fluxID == 730 & datetime <= ymd_hms("2021-08-16T16:22:50") ~ NA_real_,
+      fluxID == 937 & datetime >= ymd_hms("2021-08-19T16:00:30") ~ NA_real_,
+      fluxID == 943 & datetime <= ymd_hms("2021-08-19T16:09:50") ~ NA_real_,
+      fluxID == 1102 & datetime <= ymd_hms("2021-09-06T15:02:50") ~ NA_real_,
+      datetime %in% c(ymd_hms("2021-09-09T10:52:10"):ymd_hms("2021-09-09T10:53:20")) ~ NA_real_,
+      
       TRUE ~ as.numeric(PAR)
       )
   )
 
+
 # filter(co2_cut, campaign == 1) %>% 
-filter(co2_cut, type == "NEE") %>% 
+filter(co2_cut, type == "NEE") %>% #cleaned!
   ggplot(aes(x = datetime, y = PAR)) +
     geom_line(size = 0.2, aes(group = fluxID)) +
     scale_x_datetime(date_breaks = "1 min", minor_breaks = "10 sec", date_labels = "%e/%m \n %H:%M") +
