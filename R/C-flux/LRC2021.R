@@ -5,24 +5,30 @@ source("R/Rgathering/create meta data.R")
 
 
 #download data from OSF and read it
-# get_file(node = "pk4bg",
-#          file = "Three-D_c-flux_2021.csv",
-#          path = "data/C-Flux/summer_2021",
-#          remote_path = "C-Flux")
-# 
+get_file(node = "pk4bg",
+         file = "Three-D_c-flux_2021.csv",
+         path = "data/C-Flux/summer_2021",
+         remote_path = "C-Flux")
+ 
 flux <- read_csv("data/C-Flux/summer_2021/Three-D_c-flux_2021.csv")
 
 
 
 #adding meta data
-flux <- left_join(flux, metaTurfID, by = c("turf_ID"="turfID"))
+flux <- left_join(flux, metaTurfID, by = "turfID")
 
 #LRC
 lrc_flux <- flux %>% 
-  filter(type == c("LRC1", "LRC2", "LRC3", "LRC4", "LRC5"))
+  filter(
+    type == "LRC1"
+    | type == "LRC2"
+    | type == "LRC3" 
+    | type == "LRC4" 
+    | type == "LRC5"
+    )
 
 #graph each light response curves
-ggplot(lrc_flux, aes(x = PARavg, y = flux, color = turf_ID)) +
+ggplot(lrc_flux, aes(x = PARavg, y = flux, color = turfID)) +
   geom_point(size = 0.1) +
   facet_wrap(vars(campaign)) +
   # geom_smooth(method = "lm", se = FALSE)
@@ -32,6 +38,12 @@ ggplot(lrc_flux, aes(x = PARavg, y = flux, color = turf_ID)) +
 ggplot(lrc_flux, aes(x = PARavg, y = flux, color = warming)) +
   geom_point(size = 0.1) +
   facet_wrap(vars(campaign)) +
+  # geom_smooth(method = "lm", se = FALSE)
+  geom_smooth(method = "lm", formula = y ~ poly(x, 2), se = FALSE)
+
+ggplot(lrc_flux, aes(x = PARavg, y = flux, color = warming)) +
+  geom_point(size = 0.1) +
+  # facet_wrap(vars(campaign)) +
   # geom_smooth(method = "lm", se = FALSE)
   geom_smooth(method = "lm", formula = y ~ poly(x, 2), se = FALSE)
 
@@ -47,7 +59,7 @@ coefficients_lrc <- lrc_flux %>%
          
   ) %>% 
   unnest(table) %>% 
-  select(treatment, `(Intercept)`, PARavg, `I(PARavg^2)`) %>% 
+  select(warming, `(Intercept)`, PARavg, `I(PARavg^2)`, campaign) %>% 
   rename(
     origin = "(Intercept)",
     a = "I(PARavg^2)",
@@ -59,14 +71,34 @@ coefficients_lrc <- lrc_flux %>%
 #origini is calculated with coefficients from the model and flux and PAR value of specific flux
 # corrected_flux = flux + a (1000^2 - PAR^2) + b (1000 - PAR)
 
-PARfix <- 1000 #PAR value at which we want the corrected flux to be
+PARfix <- 300 #PAR value at which we want the corrected flux to be for NEE
+PARnull <- 0 #PAR value for ER
 
-flux_test <- flux %>% 
+flux_corrected <- flux %>% 
   left_join(coefficients_lrc, by = c("warming", "campaign")) %>% 
   mutate(
     corrected_flux = 
       case_when( #we correct only the NEE
         type == "NEE" ~ flux + a * (PARfix^2 - PARavg^2) + b * (PARfix - PARavg),
-        type == "ER" ~ flux
-      )
-  )
+        type == "ER" ~ flux + a * (PARnull^2 - PARavg^2) + b * (PARnull - PARavg)
+      ),
+    delta_flux = flux -corrected_flux
+  )# %>% 
+  # filter( #removing LRC now that we used them
+  #   type == "NEE"
+  #   | type == "ER"
+  # )
+
+#visualize the difference between corrected and not corrected
+flux_corrected %>% 
+  filter( #removing LRC now that we used them
+    type == "NEE"
+    | type == "ER"
+  ) %>% 
+ggplot(aes(x = PARavg, y = delta_flux, color = warming)) +
+  geom_point() +
+  # geom_line() +
+  facet_grid(vars(campaign), vars(type), scales = "free")
+
+write_csv(flux_corrected, "data_cleaned/c-flux/Three-D_c-flux_2021.csv")
+
