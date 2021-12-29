@@ -286,6 +286,8 @@ co2_cut <- co2_cut %>%
         145,
         147,
         149,
+        378,
+        384,
         400
       )
       
@@ -328,7 +330,13 @@ filter(co2_cut, type == "ER") %>% #cleaned
   facet_wrap(vars(fluxID), ncol = 40, scales = "free") +
   ggsave("threed_2021_detail_PAR_ER.png", height = 40, width = 80, units = "cm")
 
-filter(co2_cut, type == c("LRC1", "LRC2", "LRC3", "LRC4", "LRC5")) %>% #cleaned
+filter(co2_cut, 
+           type == "LRC1"
+         | type == "LRC2"
+         | type == "LRC3" 
+         | type == "LRC4" 
+         | type == "LRC5"
+       ) %>% #cleaned
   ggplot(aes(x = datetime, y = PAR)) +
   geom_line(size = 0.2, aes(group = fluxID)) +
   scale_x_datetime(date_breaks = "1 min", minor_breaks = "10 sec", date_labels = "%e/%m \n %H:%M") +
