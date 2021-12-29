@@ -304,7 +304,8 @@ co2_cut <- co2_cut %>%
       fluxID == 943 & datetime <= ymd_hms("2021-08-19T16:09:50") ~ NA_real_,
       fluxID == 1102 & datetime <= ymd_hms("2021-09-06T15:02:50") ~ NA_real_,
       datetime %in% c(ymd_hms("2021-09-09T10:52:10"):ymd_hms("2021-09-09T10:53:20")) ~ NA_real_,
-      
+      type == "ER" & PAR <= 0 ~ 0, #close to 0 the logger can have some negative values but it is 0 in reality
+      fluxID == 1362 & datetime <= ymd_hms("2021-09-09T15:05:15") ~ NA_real_,
       TRUE ~ as.numeric(PAR)
       )
   )
@@ -319,7 +320,7 @@ filter(co2_cut, type == "NEE") %>% #cleaned!
     facet_wrap(vars(fluxID), ncol = 40, scales = "free") +
     ggsave("threed_2021_detail_PAR_NEE.png", height = 40, width = 80, units = "cm")
 
-filter(co2_cut, type == "ER") %>% 
+filter(co2_cut, type == "ER") %>% #cleaned
   ggplot(aes(x = datetime, y = PAR)) +
   geom_line(size = 0.2, aes(group = fluxID)) +
   scale_x_datetime(date_breaks = "1 min", minor_breaks = "10 sec", date_labels = "%e/%m \n %H:%M") +
@@ -327,7 +328,7 @@ filter(co2_cut, type == "ER") %>%
   facet_wrap(vars(fluxID), ncol = 40, scales = "free") +
   ggsave("threed_2021_detail_PAR_ER.png", height = 40, width = 80, units = "cm")
 
-filter(co2_cut, type == c("LRC1", "LRC2", "LRC3", "LRC4", "LRC5")) %>% 
+filter(co2_cut, type == c("LRC1", "LRC2", "LRC3", "LRC4", "LRC5")) %>% #cleaned
   ggplot(aes(x = datetime, y = PAR)) +
   geom_line(size = 0.2, aes(group = fluxID)) +
   scale_x_datetime(date_breaks = "1 min", minor_breaks = "10 sec", date_labels = "%e/%m \n %H:%M") +
@@ -372,23 +373,30 @@ flux.calc <- function(co2conc, # dataset of CO2 concentration versus time (outpu
            # & p.value < 0.05 #keeping only the significant fluxes
     ) %>% 
     # select(ID, Plot_ID, Type, Replicate, Remarks, Date, PARavg, Temp_airavg, r.squared, p.value, estimate, Campaign) %>% #select the column we need, dump the rest
-    distinct(fluxID, turf_ID, type, commments, date, PARavg, temp_airavg, temp_soilavg, r.squared, p.value, estimate, campaign, .keep_all = TRUE) %>%  #remove duplicate. Because of the nesting, we get one row per Datetime entry. We only need one row per flux. Select() gets rid of Datetime and then distinct() is cleaning those extra rows.
+    distinct(fluxID, turfID, type, comments, date, PARavg, temp_airavg, temp_soilavg, r.squared, p.value, estimate, campaign, .keep_all = TRUE) %>%  #remove duplicate. Because of the nesting, we get one row per Datetime entry. We only need one row per flux. Select() gets rid of Datetime and then distinct() is cleaning those extra rows.
     #calculate fluxes using the trendline and the air temperature
     mutate(flux = (estimate * atm_pressure * vol)/(R * temp_airavg * plot_area) #gives flux in micromol/s/m^2
            *3600 #secs to hours
            /1000 #micromol to mmol
     ) %>%  #flux is now in mmol/m^2/h, which is more common
-    select(datetime, fluxID, turf_ID, type, comments, date, PARavg, temp_airavg, temp_soilavg, r.squared, p.value, nobs, flux, campaign)
+    select(datetime, fluxID, turfID, type, comments, date, PARavg, temp_airavg, temp_soilavg, r.squared, p.value, nobs, flux, campaign)
   
   return(fluxes_final)
   
 }
 
 fluxes2021 <- flux.calc(co2_cut) %>% 
-  rename(
-    date_time = datetime,
-    turfID = turf_ID
+  mutate(
+    PARavg = case_when(
+      is.nan(PARavg) == TRUE ~ NA_real_, #mean(PAR) returned NaN when PAR was all NAs but it is missing values
+      TRUE ~ as.numeric(PARavg)
+    )
   )
+  
+  # rename(
+  #   date_time = datetime,
+  #   turfID = turf_ID
+  # )
 
-write_csv(fluxes2021, "data/c-flux/summer_2021/Three-D_c-flux_2021.csv")
+write_csv(fluxes2021, "data_cleaned/c-flux/Three-D_c-flux_2021.csv")
 
