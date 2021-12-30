@@ -80,15 +80,17 @@ flux2021 <- left_join(flux_gep, metaTurfID, by = "turfID") %>%
 
 #graphing
 ggplot(flux2021, aes(x = temp_soil, y = corrected_flux, color = grazing)) +
-  geom_point() +
+  geom_point(size = 0.4) +
   # geom_line(aes(group = pairID)) +
-  geom_smooth(method = "lm", se = FALSE) +
-  facet_grid(vars(type), vars(campaign))
+  geom_smooth(method = "lm", se = FALSE, size = 0.5, fullrange = TRUE) +
+  facet_grid(vars(type), vars(campaign), scales = "free") +
+  ggsave("temp_soil_vs_flux_grazing.png", height = 20, width = 20, units = "cm")
 
 ggplot(flux2021, aes(x = temp_soil, y = corrected_flux, color = Nlevel)) +
-  geom_point() +
+  geom_point(size = 0.4) +
   # geom_line(aes(group = pairID)) +
-  geom_smooth(method = "lm", se = FALSE) +
-  facet_grid(vars(type), vars(campaign))
+  geom_smooth(method = "lm", se = FALSE, size = 0.5, fullrange = TRUE) +
+  facet_grid(vars(type), vars(campaign), scales = "free") +
+  ggsave("temp_soil_vs_flux_Nlevel.png", height = 20, width = 20, units = "cm")
   
   
