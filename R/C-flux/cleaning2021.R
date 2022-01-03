@@ -1,6 +1,8 @@
 library("dataDownloader")
 library(broom)
 library(fs)
+library(zoo)
+library(slider)
 source("R/Load packages.R")
 # source("https://raw.githubusercontent.com/jogaudard/common/master/fun-fluxes.R")
 
@@ -312,6 +314,36 @@ co2_cut <- co2_cut %>%
       )
   )
 
+#replacing PAR Na by 2h before/after average
+# roll_period <- 1
+# 
+# PAR_ER <- filter(co2_cut, type == "ER") %>% 
+#   slide_period_dfr(
+#     # .,
+#     .$datetime,
+#     "hour",
+#     .every = roll_period,
+#     ~data.frame(
+#       datetime = max(.x$datetime),
+#       PAR_roll = mean(.x$PAR, na.rm = TRUE)
+#     )
+#   )
+# 
+# PAR_NEE <- filter(co2_cut, type == "NEE") %>% 
+#   slide_period_dfr(
+#     # .,
+#     .$datetime,
+#     "hour",
+#     .every = roll_period,
+#     ~data.frame(
+#       datetime = max(.x$datetime),
+#       PAR_roll = mean(.x$PAR, na.rm = TRUE)
+#     )
+#   )
+# 
+# 
+# co2_cut <- left_join(co2_cut, PAR_ER)
+
 
 # filter(co2_cut, campaign == 1) %>% 
 filter(co2_cut, type == "NEE") %>% #cleaned!
@@ -401,6 +433,66 @@ fluxes2021 <- flux.calc(co2_cut) %>%
     )
   )
   
+#replacing PAR Na by the average PAR of the 3h period in which the measurement is
+roll_period <- 3
+
+PAR_ER <- filter(fluxes2021, type == "ER") %>%
+  slide_period_dfr(
+    # .,
+    .$datetime,
+    "hour",
+    .every = roll_period,
+    ~data.frame(
+      datetime = max(.x$datetime),
+      PAR_roll_ER = mean(.x$PARavg, na.rm = TRUE)
+    )
+  )
+
+PAR_NEE <- filter(fluxes2021, type == "NEE") %>%
+  slide_period_dfr(
+    # .,
+    .$datetime,
+    "hour",
+    .every = roll_period,
+    ~data.frame(
+      datetime = max(.x$datetime),
+      PAR_roll_NEE = mean(.x$PARavg, na.rm = TRUE)
+    )
+  )
+
+
+
+fluxes2021 <- left_join(fluxes2021, PAR_ER) %>% 
+  left_join(PAR_NEE) %>% 
+  fill(PAR_roll_NEE, .direction = "up") %>% 
+  fill(PAR_roll_ER, .direction = "up") %>% 
+  mutate(
+    comments = case_when(
+      is.na(PARavg) == TRUE
+      & type != "SoilR"
+      # & type == ("ER" | "NEE")
+      ~ paste0(comments,  ";", " PAR 3h period average"),
+      TRUE ~ comments
+    ),
+    comments = str_replace_all(comments, "NA; ", ""),
+    PARavg = case_when(
+      is.na(PARavg) == TRUE
+      & type == "ER"
+      ~ PAR_roll_ER,
+      is.na(PARavg) == TRUE
+      & type == "NEE"
+      ~ PAR_roll_NEE,
+      TRUE ~ PARavg
+    )
+      # replace_na(PARavg,
+      #                   case_when(
+      #                     type == "ER" ~ PAR_roll_ER,
+      #                     type == "NEE" ~ PAR_roll_NEE
+      #                   )
+      #                   )
+    
+  ) %>% 
+  select(!c(PAR_roll_NEE, PAR_roll_ER))
   # rename(
   #   date_time = datetime,
   #   turfID = turf_ID
