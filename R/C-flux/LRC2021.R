@@ -90,15 +90,35 @@ flux_corrected <- flux %>%
   # )
 
 #visualize the difference between corrected and not corrected
+# flux_corrected %>% 
+#   filter( #removing LRC now that we used them
+#     type == "NEE"
+#     | type == "ER"
+#   ) %>% 
+# ggplot(aes(x = PARavg, y = delta_flux, color = warming)) +
+#   geom_point() +
+#   # geom_line() +
+#   facet_grid(vars(campaign), vars(type), scales = "free")
+
+# flux_corrected %>% 
+#   # filter( #removing LRC now that we used them
+#   #   type == "NEE"
+#   #   | type == "ER"
+#   # ) %>% 
+#   ggplot() +
+#   geom_point(aes(x = PARavg, y = flux, color = warming)) +
+#   geom_smooth(method = "lm", formula = y ~ poly(x, 2), se = FALSE, aes(x = PARavg, y = corrected_flux, color = warming))
+  # geom_line() +
+  # facet_grid(vars(campaign), vars(type), scales = "free")
 flux_corrected %>% 
   filter( #removing LRC now that we used them
-    type == "NEE"
-    | type == "ER"
-  ) %>% 
-ggplot(aes(x = PARavg, y = delta_flux, color = warming)) +
+        type == "NEE"
+        | type == "ER"
+      ) %>%
+  ggplot(aes(x = flux, y = corrected_flux, color = warming)) +
   geom_point() +
-  # geom_line() +
+  geom_smooth(method = "lm", formula = y ~ poly(x, 2), se = FALSE) +
   facet_grid(vars(campaign), vars(type), scales = "free")
 
-write_csv(flux_corrected, "data_cleaned/c-flux/Three-D_c-flux_2021.csv")
+write_csv(flux_corrected, "data_cleaned/c-flux/Three-D_c-flux_2021_corrected.csv")
 
