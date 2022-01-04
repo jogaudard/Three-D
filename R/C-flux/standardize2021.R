@@ -1,3 +1,5 @@
+#script to standardize data according to PAR and soil temperature
+
 library("dataDownloader")
 library(broom)
 source("R/Load packages.R")
@@ -74,20 +76,57 @@ coefficients_lrc <- lrc_flux %>%
 PARfix <- 300 #PAR value at which we want the corrected flux to be for NEE
 PARnull <- 0 #PAR value for ER
 
-flux_corrected <- flux %>% 
+flux_corrected_PAR <- flux %>% 
   left_join(coefficients_lrc, by = c("warming", "campaign")) %>% 
   mutate(
-    corrected_flux = 
+    PAR_corrected_flux = 
       case_when( #we correct only the NEE
         type == "NEE" ~ flux + a * (PARfix^2 - PARavg^2) + b * (PARfix - PARavg),
         type == "ER" ~ flux + a * (PARnull^2 - PARavg^2) + b * (PARnull - PARavg)
-      ),
-    delta_flux = flux -corrected_flux
+      )
+    # delta_flux = flux - corrected_flux
   )# %>% 
   # filter( #removing LRC now that we used them
   #   type == "NEE"
   #   | type == "ER"
   # )
+
+#we can do the same for soil temperature
+#let's have a look
+ggplot(flux_corrected_PAR, aes(x = temp_soilavg, y = PAR_corrected_flux
+                           # , color = warming
+                           )) +
+  geom_point() +
+  geom_smooth(method = "lm", formula = y ~ poly(x, 2), se = FALSE) +
+  facet_wrap(vars(campaign))
+
+coefficients_soiltemp <- flux_corrected_PAR %>%
+  group_by(campaign) %>% 
+  nest %>% 
+  mutate(lm = map(data, ~ lm(flux ~ temp_soilavg + I(temp_soilavg^2), data = .x)),
+         table = map(lm, tidy),
+         table = map(table, select, term, estimate),
+         table = map(table, pivot_wider, names_from = term, values_from = estimate)
+         
+  ) %>% 
+  unnest(table) %>% 
+  select(`(Intercept)`, temp_soilavg, `I(temp_soilavg^2)`, campaign) %>% 
+  rename(
+    origin2 = "(Intercept)",
+    c = "I(temp_soilavg^2)",
+    d = "temp_soilavg"
+  )
+
+soiltempfix <- 15
+flux_corrected <- flux_corrected_PAR %>% 
+  left_join(coefficients_soiltemp, by = "campaign") %>% 
+  mutate(
+    corrected_flux =
+      PAR_corrected_flux + c * (soiltempfix^2 - temp_soilavg^2) + d * (soiltempfix - temp_soilavg),
+      
+    delta_flux = flux - corrected_flux
+  ) %>% 
+  select(!c(origin, a, b, origin2, c, d))
 
 #visualize the difference between corrected and not corrected
 # flux_corrected %>% 
