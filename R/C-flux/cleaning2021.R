@@ -498,5 +498,70 @@ fluxes2021 <- left_join(fluxes2021, PAR_ER) %>%
   #   turfID = turf_ID
   # )
 
+#replace soil temp Na with average of measurements in the same 3h period
+# roll_period <- 3
+
+soiltemp_ER <- filter(fluxes2021, type == "ER") %>%
+  slide_period_dfr(
+    # .,
+    .$datetime,
+    "hour",
+    .every = roll_period,
+    ~data.frame(
+      datetime = max(.x$datetime),
+      soiltemp_roll_ER = mean(.x$temp_soilavg, na.rm = TRUE)
+    )
+  )
+
+soiltemp_NEE <- filter(fluxes2021, type == "NEE") %>%
+  slide_period_dfr(
+    # .,
+    .$datetime,
+    "hour",
+    .every = roll_period,
+    ~data.frame(
+      datetime = max(.x$datetime),
+      soiltemp_roll_NEE = mean(.x$temp_soilavg, na.rm = TRUE)
+    )
+  )
+
+
+
+fluxes2021 <- left_join(fluxes2021, soiltemp_ER) %>% 
+  left_join(soiltemp_NEE) %>% 
+  fill(soiltemp_roll_NEE, .direction = "up") %>% 
+  fill(soiltemp_roll_ER, .direction = "up") %>% 
+  mutate(
+    comments = case_when(
+      is.na(temp_soilavg) == TRUE
+      # & type != "SoilR"
+      # & type == ("ER" | "NEE")
+      ~ paste0(comments,  ";", " soil temp 3h period average"),
+      TRUE ~ comments
+    ),
+    comments = str_replace_all(comments, "NA; ", ""),
+    temp_soilavg = case_when(
+      is.na(temp_soilavg) == TRUE
+      & type == "ER"
+      ~ soiltemp_roll_ER,
+      is.na(temp_soilavg) == TRUE
+      & type == "NEE"
+      ~ soiltemp_roll_NEE,
+      TRUE ~ temp_soilavg
+    )
+    # replace_na(PARavg,
+    #                   case_when(
+    #                     type == "ER" ~ PAR_roll_ER,
+    #                     type == "NEE" ~ PAR_roll_NEE
+    #                   )
+    #                   )
+    
+  ) %>% 
+  select(!c(soiltemp_roll_NEE, soiltemp_roll_ER))
+# rename(
+#   date_time = datetime,
+#   turfID = turf_ID
+# )
+
 write_csv(fluxes2021, "data_cleaned/c-flux/Three-D_c-flux_2021.csv")
 
