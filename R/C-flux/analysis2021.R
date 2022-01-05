@@ -160,12 +160,12 @@ ggplot(flux2021, aes(x = nitrogen, y = corrected_flux, color = grazing)) +
   facet_grid(vars(type), vars(campaign), scales = "free") +
   labs(
     # title = "",
-    caption = bquote(~CO[2]~'flux standardized at PAR = 300 mol/'*m^2*'/s and soil temperature = 15 °C'),
+    caption = bquote(~CO[2]~'Flux standardized at PAR = 300 mol/'*m^2*'/s for NEE and PAR = 0 mol/'*m^2*'/s for ER, and soil temperature = 15 °C'),
     color = "Grazing treatment",
     x = "Nitrogen addition [kg/ha/y]",
     y = bquote(~CO[2]~'flux [mmol/'*m^2*'/h]')
   ) +
-  ggsave("nitrogen_vs_flux_grazing_fixedtemp.png", height = 20, width = 20, units = "cm")
+  ggsave("nitrogen_vs_flux_grazing_fixedtemp2.png", height = 20, width = 20, units = "cm")
 
 ggplot(flux2021, aes(x = nitrogen, y = corrected_flux, color = warming)) +
   geom_point(size = 0.4) +
@@ -175,11 +175,60 @@ ggplot(flux2021, aes(x = nitrogen, y = corrected_flux, color = warming)) +
   facet_grid(vars(type), vars(campaign), scales = "free") +
   labs(
     # title = "",
-    caption = bquote(~CO[2]~'flux standardized at PAR = 300 mol/'*m^2*'/s and soil temperature = 15 °C'),
+    caption = bquote(~CO[2]~'Flux standardized at PAR = 300 mol/'*m^2*'/s for NEE and PAR = 0 mol/'*m^2*'/s for ER, and soil temperature = 15 °C'),
     color = "Grazing treatment",
     x = "Nitrogen addition [kg/ha/y]",
     y = bquote(~CO[2]~'flux [mmol/'*m^2*'/h]')
   ) +
-  ggsave("nitrogen_vs_flux_warming_fixedtemp.png", height = 20, width = 20, units = "cm")
+  ggsave("nitrogen_vs_flux_warming_fixedtemp2.png", height = 20, width = 20, units = "cm")
 
+flux2021 %>% 
+  filter(type == "ER") %>% 
+  ggplot(aes(x = nitrogen, y = corrected_flux, color = warming)) +
+  geom_point(size = 0.4) +
+  geom_smooth(method = "lm",
+              # formula = y ~ poly(x, 2),
+              se = FALSE, size = 0.5, fullrange = TRUE) +
+  facet_grid(vars(grazing), vars(campaign), scales = "free") +
+  labs(
+    title = "Ecosystem respiration",
+    caption = bquote(~CO[2]~'Flux standardized at PAR = 300 mol/'*m^2*'/s for NEE and PAR = 0 mol/'*m^2*'/s for ER, and soil temperature = 15 °C'),
+    color = "Warming",
+    x = "Nitrogen addition [kg/ha/y]",
+    y = bquote(~CO[2]~'flux [mmol/'*m^2*'/h]')
+  ) +
+  ggsave("nitrogen_vs_ER_warming_fixedtemp.png", height = 20, width = 20, units = "cm")
        
+flux2021 %>% 
+  filter(type == "NEE") %>% 
+  ggplot(aes(x = nitrogen, y = corrected_flux, color = warming)) +
+  geom_point(size = 0.4) +
+  geom_smooth(method = "lm",
+              # formula = y ~ poly(x, 2),
+              se = FALSE, size = 0.5, fullrange = TRUE) +
+  facet_grid(vars(grazing), vars(campaign), scales = "free") +
+  labs(
+    title = "Net ecosystem exchange",
+    caption = bquote(~CO[2]~'Flux standardized at PAR = 300 mol/'*m^2*'/s for NEE and PAR = 0 mol/'*m^2*'/s for ER, and soil temperature = 15 °C'),
+    color = "Warming",
+    x = "Nitrogen addition [kg/ha/y]",
+    y = bquote(~CO[2]~'flux [mmol/'*m^2*'/h]')
+  ) +
+  ggsave("nitrogen_vs_NEE_warming_fixedtemp.png", height = 20, width = 20, units = "cm")
+
+flux2021 %>% 
+  filter(type == "GEP") %>% 
+  ggplot(aes(x = nitrogen, y = corrected_flux, color = warming)) +
+  geom_point(size = 0.4) +
+  geom_smooth(method = "lm",
+              # formula = y ~ poly(x, 2),
+              se = FALSE, size = 0.5, fullrange = TRUE) +
+  facet_grid(vars(grazing), vars(campaign), scales = "free") +
+  labs(
+    title = "Gross ecosystem production",
+    caption = bquote(~CO[2]~'Flux standardized at PAR = 300 mol/'*m^2*'/s for NEE and PAR = 0 mol/'*m^2*'/s for ER, and soil temperature = 15 °C'),
+    color = "Warming",
+    x = "Nitrogen addition [kg/ha/y]",
+    y = bquote(~CO[2]~'flux [mmol/'*m^2*'/h]')
+  ) +
+  ggsave("nitrogen_vs_GEP_warming_fixedtemp.png", height = 20, width = 20, units = "cm")
