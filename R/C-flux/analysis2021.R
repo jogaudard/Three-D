@@ -102,6 +102,7 @@ flux2021 <- left_join(flux_gep, metaTurfID, by = "turfID") %>%
       "M" = "Medium",
       "N" = "Natural"
     )),
+    grazing = factor(grazing, levels = c("Control", "Medium", "Intensive", "Natural")),
     nitrogen = case_when(
       Nlevel %in% c(1:3) ~ 0,
       Nlevel == 4 ~ 0.5,
@@ -232,3 +233,24 @@ flux2021 %>%
     y = bquote(~CO[2]~'flux [mmol/'*m^2*'/h]')
   ) +
   ggsave("nitrogen_vs_GEP_warming_fixedtemp.png", height = 20, width = 20, units = "cm")
+
+flux2021 %>% 
+  filter(
+    nitrogen == 0 &
+      grazing == "Control"
+  ) %>% 
+  mutate(
+    campaign = as.factor(campaign)
+  ) %>% 
+  ggplot(aes(x = campaign, y = corrected_flux)) +
+  geom_boxplot(aes(fill = warming), position = "dodge") +
+  # geom_col(aes(fill = warming), position = "dodge")
+  facet_wrap(vars(type), ncol = 1) +
+  labs(
+    title = "Control plots only",
+    caption = bquote(~CO[2]~'Flux standardized at PAR = 300 mol/'*m^2*'/s for NEE and PAR = 0 mol/'*m^2*'/s for ER, and soil temperature = 15 °C'),
+    fill = "Warming",
+    x = "Campaigns",
+    y = bquote(~CO[2]~'flux [mmol/'*m^2*'/h]')
+  ) +
+  ggsave("controlplotsflux.png", height = 20, width = 20, units = "cm")
