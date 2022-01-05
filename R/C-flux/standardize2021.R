@@ -93,24 +93,40 @@ flux_corrected_PAR <- flux %>%
 
 #we can do the same for soil temperature
 #let's have a look
-ggplot(flux_corrected_PAR, aes(x = temp_soilavg, y = PAR_corrected_flux
-                           # , color = warming
+filter(flux_corrected_PAR,
+       type == "ER" |
+         type == "NEE") %>% 
+ggplot(aes(x = temp_soilavg, y = PAR_corrected_flux
+                           , color = type
                            )) +
   geom_point() +
   geom_smooth(method = "lm", formula = y ~ poly(x, 2), se = FALSE) +
   facet_wrap(vars(campaign))
 
-coefficients_soiltemp <- flux_corrected_PAR %>%
-  group_by(campaign) %>% 
+filter(flux_corrected_PAR,
+       type == "ER" |
+         type == "NEE") %>%
+  ggplot(aes(x = temp_soilavg, y = PAR_corrected_flux
+             # , color = type
+             )) +
+  geom_point() +
+  geom_smooth(method = "lm", formula = y ~ poly(x, 2), se = FALSE, fullrange = TRUE) +
+  facet_grid(vars(warming), vars(campaign))
+
+coefficients_soiltemp <- filter(flux_corrected_PAR, 
+                                type == "ER" |
+                                  type == "NEE"
+                                ) %>%
+  group_by(warming, campaign) %>% 
   nest %>% 
-  mutate(lm = map(data, ~ lm(flux ~ temp_soilavg + I(temp_soilavg^2), data = .x)),
+  mutate(lm = map(data, ~ lm(PAR_corrected_flux ~ temp_soilavg + I(temp_soilavg^2), data = .x)),
          table = map(lm, tidy),
          table = map(table, select, term, estimate),
          table = map(table, pivot_wider, names_from = term, values_from = estimate)
          
   ) %>% 
   unnest(table) %>% 
-  select(`(Intercept)`, temp_soilavg, `I(temp_soilavg^2)`, campaign) %>% 
+  select(warming, `(Intercept)`, temp_soilavg, `I(temp_soilavg^2)`, campaign) %>% 
   rename(
     origin2 = "(Intercept)",
     c = "I(temp_soilavg^2)",
@@ -119,7 +135,7 @@ coefficients_soiltemp <- flux_corrected_PAR %>%
 
 soiltempfix <- 15
 flux_corrected <- flux_corrected_PAR %>% 
-  left_join(coefficients_soiltemp, by = "campaign") %>% 
+  left_join(coefficients_soiltemp, by = c("warming", "campaign")) %>% 
   mutate(
     corrected_flux =
       PAR_corrected_flux + c * (soiltempfix^2 - temp_soilavg^2) + d * (soiltempfix - temp_soilavg),
@@ -157,7 +173,7 @@ flux_corrected %>%
   ggplot(aes(x = flux, y = corrected_flux, color = warming)) +
   geom_point() +
   geom_smooth(method = "lm", formula = y ~ poly(x, 2), se = FALSE) +
-  facet_grid(vars(campaign), vars(type), scales = "free")
+  facet_grid(vars(type), vars(campaign))
 
 write_csv(flux_corrected, "data_cleaned/c-flux/Three-D_c-flux_2021_corrected.csv")
 
