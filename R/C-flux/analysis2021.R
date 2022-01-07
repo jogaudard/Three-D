@@ -254,3 +254,50 @@ flux2021 %>%
     y = bquote(~CO[2]~'flux [mmol/'*m^2*'/h]')
   ) +
   ggsave("controlplotsflux.png", height = 20, width = 20, units = "cm")
+
+#let's try to compare paired (transplant vs ambient) plots
+flux2021_delta <- flux2021 %>% 
+  select(type, campaign, site, block, grazing, nitrogen, pairID, warming, corrected_flux) %>% 
+  pivot_wider(names_from = "warming", values_from = "corrected_flux") %>% 
+  mutate(
+    delta_flux = Transplant - Ambient
+  )
+
+ggplot(
+  flux2021_delta,
+  aes(x = nitrogen, y = delta_flux, color = grazing)
+) +
+  geom_point() +
+  geom_smooth(method = "lm",
+              # formula = y ~ poly(x, 2),
+              se = FALSE, size = 0.5, fullrange = TRUE) +
+  facet_grid(vars(type), vars(campaign))
+
+flux2021_slopes <- flux2021_delta %>% 
+  drop_na(nitrogen, delta_flux) %>% 
+  nest(-c(type, campaign, grazing)) %>% 
+  # group_by(type, campaign, grazing) %>% 
+  mutate(
+    fit = map(data, ~lm(delta_flux ~ nitrogen, data = .)),
+    results = map(fit, glance),
+    slope = map(fit, tidy)
+  ) %>% 
+  unnest(c(results, slope), names_repair = "universal") %>% 
+  unnest(data) %>% 
+  filter(
+    term == "nitrogen"
+  ) %>% 
+  rename(
+    slope_flux_nitrogen = "estimate"
+  ) %>% 
+  select(type, campaign, grazing, site, block, nitrogen, pairID, Transplant, Ambient, delta_flux, slope_flux_nitrogen)
+  # summarise(
+  #     fit = map(data, ~lm(delta_flux ~ nitrogen, data = .)),
+  #     results = map(fit, glance),
+  #     slope = map(fit, tidy)
+  # )
+
+ggplot(flux2021_slopes) +
+  geom_boxplot(aes(x = type, y = slope_flux_nitrogen, color = grazing)) 
+  facet_wrap(vars(campaign))
+  
