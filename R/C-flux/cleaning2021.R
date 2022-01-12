@@ -165,7 +165,10 @@ filter(co2_cut, campaign == 4) %>% #cleaned!
 
 #Is there a more automated way to do one file per campaign??
 
-co2_cut <- filter(co2_cut, cut == "keep") #to keep only the part we want to keep
+co2_cut <- filter(co2_cut,
+                  cut == "keep" & #to keep only the part we want to keep
+                    type != "SoilR" #soil respiration will have to be calculated separately because the chambers are of different size
+  ) 
 
 #need to clean PAR, temp_air, temp_soil
 
