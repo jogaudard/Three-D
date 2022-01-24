@@ -95,6 +95,7 @@ flux2021 <- left_join(flux_gep, metaTurfID, by = "turfID") %>%
       "Joa" = "Joasete",
       "Lia" = "Liahovden"
     )),
+    site = as.factor(site),
     block = factor(origBlockID),
     grazing = str_replace_all(grazing, c(
       "I" = "Intensive",
@@ -185,8 +186,8 @@ ggplot(flux2021, aes(x = nitrogen, y = corrected_flux, color = warming)) +
 
 flux2021 %>% 
   filter(type == "ER") %>% 
-  ggplot(aes(x = nitrogen, y = corrected_flux, color = warming)) +
-  geom_point(size = 0.4) +
+  ggplot(aes(x = nitrogen, y = corrected_flux, color = warming, shape = site)) +
+  geom_point(size = 1) +
   geom_smooth(method = "lm",
               # formula = y ~ poly(x, 2),
               se = FALSE, size = 0.5, fullrange = TRUE) +
@@ -202,6 +203,7 @@ flux2021 %>%
     "Ambient" = "#1e90ff",
     "Transplant" = "#ff0800"
   )) +
+  scale_x_continuous(trans = 'log10') +
   ggsave("nitrogen_vs_ER_warming_fixedtemp.png", height = 20, width = 20, units = "cm")
        
 flux2021 %>% 
