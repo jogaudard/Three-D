@@ -383,52 +383,104 @@ filter(co2_cut,
 ##Next part is for calculating the fluxes, once the data have been cleaned
 
 #first, a function to calculate fluxes
-flux.calc <- function(co2conc, # dataset of CO2 concentration versus time (output of match.flux)
-                      chamber_volume = 24.5, # volume of the flux chamber in L, default for Three-D chamber (25x24.5x40cm)
-                      tube_volume = 0.075, # volume of the tubing in L, default for summer 2020 setup
-                      atm_pressure = 1, # atmoshperic pressure, assumed 1 atm
-                      plot_area = 0.0625 # area of the plot in m^2, default for Three-D
+# (26.01.2022) made a new function which I believe is better, old one is in comment further
+
+flux.calc2 <- function(co2conc, # dataset of CO2 concentration versus time (output of match.flux)
+                       chamber_volume = 24.5, # volume of the flux chamber in L, default for Three-D chamber (25x24.5x40cm)
+                       tube_volume = 0.075, # volume of the tubing in L, default for summer 2020 setup
+                       atm_pressure = 1, # atmoshperic pressure, assumed 1 atm
+                       plot_area = 0.0625 # area of the plot in m^2, default for Three-D
 )
 {
   R = 0.082057 #gas constant, in L*atm*K^(-1)*mol^(-1)
   vol = chamber_volume + tube_volume
-  fluxes_final <- co2conc %>% 
-    # group_by(ID) %>% 
-    nest(-fluxID) %>% 
+  # co2conc <- co2_cut
+  slopes <- co2conc %>% 
+    group_by(fluxID) %>% 
     mutate(
-      data = map(data, ~.x %>% 
-                   mutate(time = difftime(datetime[1:length(datetime)],datetime[1] , units = "secs"), #add a column with the time difference between each measurements and the beginning of the measurement. Usefull to calculate the slope.
-                          PARavg = mean(PAR, na.rm = TRUE), #mean value of PAR for each flux
-                          temp_airavg = mean(temp_air, na.rm = TRUE)  #mean value of Temp_air for each flux
-                          + 273.15, #transforming in kelvin for calculation
-                          temp_soilavg = mean(temp_soil, na.rm = TRUE) #mean value of temp_soil for each flux
-                   )), 
-      fit = map(data, ~lm(CO2 ~ time, data = .)), #fit is a new column in the tibble with the slope of the CO2 concentration vs time (in secs^(-1))
-      # slope = map_dbl(fit, "time")
-      results = map(fit, glance), #to see the coefficients of the model
-      slope = map(fit, tidy) #creates a tidy df with the coefficients of fit
+      time = difftime(datetime[1:length(datetime)],datetime[1] , units = "secs")
     ) %>% 
-    
-    unnest(results, slope) %>% 
-    unnest(data) %>% 
-    filter(term == 'time'  #filter the estimate of time only. That is the slope of the CO2 concentration. We need that to calculate the flux.
-           # & r.squared >= 0.7 #keeping only trendline with an r.squared above or equal to 0.7. Below that it means that the data are not good quality enough
-           # & p.value < 0.05 #keeping only the significant fluxes
+    select(fluxID, time, CO2) %>%
+    do({model = lm(CO2 ~ time, data=.)    # create your model
+    data.frame(tidy(model),              # get coefficient info
+               glance(model))}) %>%          # get model info
+    filter(term == "time") %>% 
+    rename(slope = estimate) %>% 
+    select(fluxID, slope, p.value, r.squared, adj.r.squared, nobs)
+  
+  means <- co2conc %>% 
+    group_by(fluxID) %>% 
+    summarise(
+      PARavg = mean(PAR, na.rm = TRUE), #mean value of PAR for each flux
+      temp_airavg = mean(temp_air, na.rm = TRUE)  #mean value of temp_air for each flux
+      + 273.15, #transforming in kelvin for calculation
+      temp_soilavg = mean(temp_soil, na.rm = TRUE) #mean value of temp_soil for each flux
+    )
+  
+  fluxes_final <- left_join(slopes, means, by = "fluxID") %>% 
+    left_join(
+      select(co2conc, fluxID, turfID, type, comments),
+      by = "fluxID"
     ) %>% 
-    # select(ID, Plot_ID, Type, Replicate, Remarks, Date, PARavg, Temp_airavg, r.squared, p.value, estimate, Campaign) %>% #select the column we need, dump the rest
-    distinct(fluxID, turfID, type, comments, date, PARavg, temp_airavg, temp_soilavg, r.squared, p.value, estimate, campaign, .keep_all = TRUE) %>%  #remove duplicate. Because of the nesting, we get one row per Datetime entry. We only need one row per flux. Select() gets rid of Datetime and then distinct() is cleaning those extra rows.
-    #calculate fluxes using the trendline and the air temperature
-    mutate(flux = (estimate * atm_pressure * vol)/(R * temp_airavg * plot_area) #gives flux in micromol/s/m^2
-           *3600 #secs to hours
-           /1000 #micromol to mmol
-    ) %>%  #flux is now in mmol/m^2/h, which is more common
-    select(datetime, fluxID, turfID, type, comments, date, PARavg, temp_airavg, temp_soilavg, r.squared, p.value, nobs, flux, campaign)
+    distinct() %>% 
+    mutate(
+      flux = (slope * atm_pressure * vol)/(R * temp_airavg * plot_area) #gives flux in micromol/s/m^2
+      *3600 #secs to hours
+      /1000 #micromol to mmol
+    )  #flux is now in mmol/m^2/h, which is more common
   
   return(fluxes_final)
   
 }
 
-fluxes2021 <- flux.calc(co2_cut) %>% 
+# flux.calc <- function(co2conc, # dataset of CO2 concentration versus time (output of match.flux)
+#                       chamber_volume = 24.5, # volume of the flux chamber in L, default for Three-D chamber (25x24.5x40cm)
+#                       tube_volume = 0.075, # volume of the tubing in L, default for summer 2020 setup
+#                       atm_pressure = 1, # atmoshperic pressure, assumed 1 atm
+#                       plot_area = 0.0625 # area of the plot in m^2, default for Three-D
+# )
+# {
+#   R = 0.082057 #gas constant, in L*atm*K^(-1)*mol^(-1)
+#   vol = chamber_volume + tube_volume
+#   fluxes_final <- co2conc %>% 
+#     # group_by(ID) %>% 
+#     nest(-fluxID) %>% 
+#     mutate(
+#       data = map(data, ~.x %>% 
+#                    mutate(time = difftime(datetime[1:length(datetime)],datetime[1] , units = "secs"), #add a column with the time difference between each measurements and the beginning of the measurement. Usefull to calculate the slope.
+#                           PARavg = mean(PAR, na.rm = TRUE), #mean value of PAR for each flux
+#                           temp_airavg = mean(temp_air, na.rm = TRUE)  #mean value of Temp_air for each flux
+#                           + 273.15, #transforming in kelvin for calculation
+#                           temp_soilavg = mean(temp_soil, na.rm = TRUE) #mean value of temp_soil for each flux
+#                    )), 
+#       fit = map(data, ~lm(CO2 ~ time, data = .)), #fit is a new column in the tibble with the slope of the CO2 concentration vs time (in secs^(-1))
+#       # slope = map_dbl(fit, "time")
+#       results = map(fit, glance), #to see the coefficients of the model
+#       slope = map(fit, tidy) #creates a tidy df with the coefficients of fit
+#     ) %>% 
+#     
+#     unnest(results, slope) %>% 
+#     unnest(data) %>% 
+#     filter(term == 'time'  #filter the estimate of time only. That is the slope of the CO2 concentration. We need that to calculate the flux.
+#            # & r.squared >= 0.7 #keeping only trendline with an r.squared above or equal to 0.7. Below that it means that the data are not good quality enough
+#            # & p.value < 0.05 #keeping only the significant fluxes
+#     ) %>% 
+#     # select(ID, Plot_ID, Type, Replicate, Remarks, Date, PARavg, Temp_airavg, r.squared, p.value, estimate, Campaign) %>% #select the column we need, dump the rest
+#     distinct(fluxID, turfID, type, comments, date, PARavg, temp_airavg, temp_soilavg, r.squared, p.value, estimate, campaign, .keep_all = TRUE) %>%  #remove duplicate. Because of the nesting, we get one row per Datetime entry. We only need one row per flux. Select() gets rid of Datetime and then distinct() is cleaning those extra rows.
+#     #calculate fluxes using the trendline and the air temperature
+#     mutate(flux = (estimate * atm_pressure * vol)/(R * temp_airavg * plot_area) #gives flux in micromol/s/m^2
+#            *3600 #secs to hours
+#            /1000 #micromol to mmol
+#     ) %>%  #flux is now in mmol/m^2/h, which is more common
+#     select(datetime, fluxID, turfID, type, comments, date, PARavg, temp_airavg, temp_soilavg, r.squared, p.value, nobs, flux, campaign)
+#   
+#   return(fluxes_final)
+#   
+# }
+
+
+
+fluxes2021 <- flux.calc2(co2_cut) %>% 
   mutate(
     PARavg = case_when(
       is.nan(PARavg) == TRUE ~ NA_real_, #mean(PAR) returned NaN when PAR was all NAs but it is missing values
@@ -567,4 +619,55 @@ fluxes2021 <- left_join(fluxes2021, soiltemp_ER) %>%
 # )
 
 write_csv(fluxes2021, "data_cleaned/c-flux/Three-D_c-flux_2021.csv")
+
+
+# fluxes quality ----------------------------------------------------------
+
+fluxes_quality <- fluxes2021 %>% mutate(
+  significance = case_when(
+    p.value <= 0.05 ~ "significant",
+    p.value > 0.05 ~ "non-significant"
+  ),
+  significance = as.factor(significance),
+  quality = case_when(
+    adj.r.squared >= 0.6 ~ "good",
+    adj.r.squared < 0.6 ~ "bad"
+  ),
+  quality = as.factor(quality)
+) %>% 
+  select(turfID, quality, significance) %>% 
+  right_join(co2_cut) %>% 
+  group_by(fluxID) %>% 
+  mutate(
+    time = difftime(datetime[1:length(datetime)],datetime[1] , units = "secs")
+  ) %>% 
+  ungroup()
+
+filter(fluxes_quality, campaign == 1) %>% 
+  ggplot(aes(x = datetime, y = CO2, color = quality)) +
+  geom_line(size = 0.2, aes(group = fluxID)) +
+  scale_x_datetime(date_breaks = "1 min", minor_breaks = "10 sec", date_labels = "%e/%m \n %H:%M") +
+  # scale_x_date(date_labels = "%H:%M:%S") +
+  facet_wrap(vars(fluxID), ncol = 30, scales = "free") +
+  scale_color_manual(values = c(
+    "good" = "green",
+    "bad" = "red"
+  )) +
+  ggsave("threed_2021_quality_1B.png", height = 40, width = 80, units = "cm")
+
+filter(fluxes_quality, quality == "bad") %>% 
+  ggplot(aes(x = time, y = CO2, color = significance)) +
+  geom_point(size = 0.2, aes(group = fluxID)) +
+  geom_smooth(method = "lm", se = FALSE, size = 0.5, fullrange = TRUE) +
+  # scale_x_datetime(date_breaks = "1 min", minor_breaks = "10 sec", date_labels = "%e/%m \n %H:%M") +
+  # scale_x_date(date_labels = "%H:%M:%S") +
+  facet_wrap(vars(fluxID), ncol = 10, scales = "free") +
+  scale_color_manual(values = c(
+    "significant" = "dark green",
+    "non-significant" = "red"
+  )) +
+  ggsave("threed_2021_significanceB.png", height = 40, width = 80, units = "cm")
+
+
+
 
