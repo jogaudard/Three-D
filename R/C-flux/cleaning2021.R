@@ -4,6 +4,7 @@ library(fs)
 library(zoo)
 library(slider)
 source("R/Load packages.R")
+
 # source("https://raw.githubusercontent.com/jogaudard/common/master/fun-fluxes.R")
 
 #function to match the fluxes with the record file
@@ -406,7 +407,8 @@ flux.calc2 <- function(co2conc, # dataset of CO2 concentration versus time (outp
                glance(model))}) %>%          # get model info
     filter(term == "time") %>% 
     rename(slope = estimate) %>% 
-    select(fluxID, slope, p.value, r.squared, adj.r.squared, nobs)
+    select(fluxID, slope, p.value, r.squared, adj.r.squared, nobs) %>% 
+    ungroup()
   
   means <- co2conc %>% 
     group_by(fluxID) %>% 
@@ -415,19 +417,26 @@ flux.calc2 <- function(co2conc, # dataset of CO2 concentration versus time (outp
       temp_airavg = mean(temp_air, na.rm = TRUE)  #mean value of temp_air for each flux
       + 273.15, #transforming in kelvin for calculation
       temp_soilavg = mean(temp_soil, na.rm = TRUE) #mean value of temp_soil for each flux
-    )
+    ) %>% 
+    ungroup()
   
   fluxes_final <- left_join(slopes, means, by = "fluxID") %>% 
     left_join(
-      select(co2conc, fluxID, turfID, type, comments),
+      co2conc,
       by = "fluxID"
     ) %>% 
+    select(fluxID, slope, p.value, r.squared, adj.r.squared, nobs, PARavg, temp_airavg, temp_soilavg, turfID, type, campaign, comments, start_window) %>% 
     distinct() %>% 
+    rename(
+      datetime = start_window
+    ) %>% 
     mutate(
       flux = (slope * atm_pressure * vol)/(R * temp_airavg * plot_area) #gives flux in micromol/s/m^2
       *3600 #secs to hours
       /1000 #micromol to mmol
-    )  #flux is now in mmol/m^2/h, which is more common
+    ) %>% #flux is now in mmol/m^2/h, which is more common
+    arrange(datetime) %>% 
+    select(!slope)
   
   return(fluxes_final)
   
@@ -524,7 +533,6 @@ fluxes2021 <- left_join(fluxes2021, PAR_ER) %>%
   mutate(
     comments = case_when(
       is.na(PARavg) == TRUE
-      & type != "SoilR"
       # & type == ("ER" | "NEE")
       ~ paste0(comments,  ";", " PAR 3h period average"),
       TRUE ~ comments
