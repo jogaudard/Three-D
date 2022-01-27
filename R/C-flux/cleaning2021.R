@@ -626,7 +626,7 @@ fluxes2021 <- left_join(fluxes2021, soiltemp_ER) %>%
 #   turfID = turf_ID
 # )
 
-write_csv(fluxes2021, "data_cleaned/c-flux/Three-D_c-flux_2021.csv")
+write_csv(fluxes2021, "data_cleaned/c-flux/Three-D_c-flux_2021_cleaned.csv")
 
 
 # fluxes quality ----------------------------------------------------------
