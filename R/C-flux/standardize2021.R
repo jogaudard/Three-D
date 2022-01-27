@@ -6,13 +6,15 @@ source("R/Load packages.R")
 source("R/Rgathering/create meta data.R")
 
 
+
 #download data from OSF and read it
-get_file(node = "pk4bg",
-         file = "Three-D_c-flux_2021.csv",
-         path = "data/C-Flux/summer_2021",
-         remote_path = "C-Flux")
+# get_file(node = "pk4bg",
+#          file = "Three-D_c-flux_2021.csv",
+#          path = "data/C-Flux/summer_2021",
+#          remote_path = "C-Flux")
  
-flux <- read_csv("data/C-Flux/summer_2021/Three-D_c-flux_2021.csv")
+flux <- read_csv("data_cleaned/c-flux/Three-D_c-flux_2021_cleaned.csv")
+
 
 
 
@@ -175,5 +177,5 @@ flux_corrected %>%
   geom_smooth(method = "lm", formula = y ~ poly(x, 2), se = FALSE) +
   facet_grid(vars(type), vars(campaign))
 
-write_csv(flux_corrected, "data_cleaned/c-flux/Three-D_c-flux_2021_corrected.csv")
+write_csv(flux_corrected, "data_cleaned/c-flux/Three-D_c-flux_2021.csv")
 
