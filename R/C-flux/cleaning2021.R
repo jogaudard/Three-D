@@ -5,23 +5,23 @@ library(zoo)
 library(slider)
 source("R/Load packages.R")
 
-# source("https://raw.githubusercontent.com/jogaudard/common/master/fun-fluxes.R")
+source("https://raw.githubusercontent.com/jogaudard/common/master/fun-fluxes.R")
 
 #function to match the fluxes with the record file
-match.flux <- function(raw_flux, field_record){
-  co2conc <- full_join(raw_flux, field_record, by = c("datetime" = "start"), keep = TRUE) %>% #joining both dataset in one
-    fill(PAR, temp_air, temp_soil, turfID, type, campaign, start, date, end, start_window, end_window) %>% #filling all rows (except Remarks) with data from above
-    group_by(date, turfID, type) %>% #this part is to fill Remarks while keeping the NA (some fluxes have no remark)
-    fill(comments) %>% 
-    ungroup() %>% 
-    mutate(fluxID = group_indices(., date, turfID, type)) %>% #assigning a unique ID to each flux, useful for plotting uzw
-    filter(
-      datetime <= end
-      & datetime >= start) #%>% #cropping the part of the flux that is after the End and before the Start
-
-  
-  return(co2conc)
-}
+# match.flux <- function(raw_flux, field_record){
+#   co2conc <- full_join(raw_flux, field_record, by = c("datetime" = "start"), keep = TRUE) %>% #joining both dataset in one
+#     fill(PAR, temp_air, temp_soil, turfID, type, campaign, start, date, end, start_window, end_window) %>% #filling all rows (except Remarks) with data from above
+#     group_by(date, turfID, type) %>% #this part is to fill Remarks while keeping the NA (some fluxes have no remark)
+#     fill(comments) %>% 
+#     ungroup() %>% 
+#     mutate(fluxID = group_indices(., date, turfID, type)) %>% #assigning a unique ID to each flux, useful for plotting uzw
+#     filter(
+#       datetime <= end
+#       & datetime >= start) #%>% #cropping the part of the flux that is after the End and before the Start
+# 
+#   
+#   return(co2conc)
+# }
 
 
 measurement <- 210 #the length of the measurement taken on the field in seconds
@@ -82,7 +82,7 @@ record <- read_csv("data/c-flux/summer_2021/Three-D_field-record_2021.csv", na =
   ) 
 
 #matching the CO2 concentration data with the turfs using the field record
-co2_fluxes <- match.flux(fluxes,record)
+co2_fluxes <- match.flux3(fluxes,record)
 
 #adjusting the time window with the actual fluxes
 
@@ -386,61 +386,61 @@ filter(co2_cut,
 #first, a function to calculate fluxes
 # (26.01.2022) made a new function which I believe is better, old one is in comment further
 
-flux.calc2 <- function(co2conc, # dataset of CO2 concentration versus time (output of match.flux)
-                       chamber_volume = 24.5, # volume of the flux chamber in L, default for Three-D chamber (25x24.5x40cm)
-                       tube_volume = 0.075, # volume of the tubing in L, default for summer 2020 setup
-                       atm_pressure = 1, # atmoshperic pressure, assumed 1 atm
-                       plot_area = 0.0625 # area of the plot in m^2, default for Three-D
-)
-{
-  R = 0.082057 #gas constant, in L*atm*K^(-1)*mol^(-1)
-  vol = chamber_volume + tube_volume
-  # co2conc <- co2_cut
-  slopes <- co2conc %>% 
-    group_by(fluxID) %>% 
-    mutate(
-      time = difftime(datetime[1:length(datetime)],datetime[1] , units = "secs")
-    ) %>% 
-    select(fluxID, time, CO2) %>%
-    do({model = lm(CO2 ~ time, data=.)    # create your model
-    data.frame(tidy(model),              # get coefficient info
-               glance(model))}) %>%          # get model info
-    filter(term == "time") %>% 
-    rename(slope = estimate) %>% 
-    select(fluxID, slope, p.value, r.squared, adj.r.squared, nobs) %>% 
-    ungroup()
-  
-  means <- co2conc %>% 
-    group_by(fluxID) %>% 
-    summarise(
-      PARavg = mean(PAR, na.rm = TRUE), #mean value of PAR for each flux
-      temp_airavg = mean(temp_air, na.rm = TRUE)  #mean value of temp_air for each flux
-      + 273.15, #transforming in kelvin for calculation
-      temp_soilavg = mean(temp_soil, na.rm = TRUE) #mean value of temp_soil for each flux
-    ) %>% 
-    ungroup()
-  
-  fluxes_final <- left_join(slopes, means, by = "fluxID") %>% 
-    left_join(
-      co2conc,
-      by = "fluxID"
-    ) %>% 
-    select(fluxID, slope, p.value, r.squared, adj.r.squared, nobs, PARavg, temp_airavg, temp_soilavg, turfID, type, campaign, comments, start_window) %>% 
-    distinct() %>% 
-    rename(
-      datetime = start_window
-    ) %>% 
-    mutate(
-      flux = (slope * atm_pressure * vol)/(R * temp_airavg * plot_area) #gives flux in micromol/s/m^2
-      *3600 #secs to hours
-      /1000 #micromol to mmol
-    ) %>% #flux is now in mmol/m^2/h, which is more common
-    arrange(datetime) %>% 
-    select(!slope)
-  
-  return(fluxes_final)
-  
-}
+# flux.calc2 <- function(co2conc, # dataset of CO2 concentration versus time (output of match.flux)
+#                        chamber_volume = 24.5, # volume of the flux chamber in L, default for Three-D chamber (25x24.5x40cm)
+#                        tube_volume = 0.075, # volume of the tubing in L, default for summer 2020 setup
+#                        atm_pressure = 1, # atmoshperic pressure, assumed 1 atm
+#                        plot_area = 0.0625 # area of the plot in m^2, default for Three-D
+# )
+# {
+#   R = 0.082057 #gas constant, in L*atm*K^(-1)*mol^(-1)
+#   vol = chamber_volume + tube_volume
+#   # co2conc <- co2_cut
+#   slopes <- co2conc %>% 
+#     group_by(fluxID) %>% 
+#     mutate(
+#       time = difftime(datetime[1:length(datetime)],datetime[1] , units = "secs")
+#     ) %>% 
+#     select(fluxID, time, CO2) %>%
+#     do({model = lm(CO2 ~ time, data=.)    # create your model
+#     data.frame(tidy(model),              # get coefficient info
+#                glance(model))}) %>%          # get model info
+#     filter(term == "time") %>% 
+#     rename(slope = estimate) %>% 
+#     select(fluxID, slope, p.value, r.squared, adj.r.squared, nobs) %>% 
+#     ungroup()
+#   
+#   means <- co2conc %>% 
+#     group_by(fluxID) %>% 
+#     summarise(
+#       PARavg = mean(PAR, na.rm = TRUE), #mean value of PAR for each flux
+#       temp_airavg = mean(temp_air, na.rm = TRUE)  #mean value of temp_air for each flux
+#       + 273.15, #transforming in kelvin for calculation
+#       temp_soilavg = mean(temp_soil, na.rm = TRUE) #mean value of temp_soil for each flux
+#     ) %>% 
+#     ungroup()
+#   
+#   fluxes_final <- left_join(slopes, means, by = "fluxID") %>% 
+#     left_join(
+#       co2conc,
+#       by = "fluxID"
+#     ) %>% 
+#     select(fluxID, slope, p.value, r.squared, adj.r.squared, nobs, PARavg, temp_airavg, temp_soilavg, turfID, type, campaign, comments, start_window) %>% 
+#     distinct() %>% 
+#     rename(
+#       datetime = start_window
+#     ) %>% 
+#     mutate(
+#       flux = (slope * atm_pressure * vol)/(R * temp_airavg * plot_area) #gives flux in micromol/s/m^2
+#       *3600 #secs to hours
+#       /1000 #micromol to mmol
+#     ) %>% #flux is now in mmol/m^2/h, which is more common
+#     arrange(datetime) %>% 
+#     select(!slope)
+#   
+#   return(fluxes_final)
+#   
+# }
 
 # flux.calc <- function(co2conc, # dataset of CO2 concentration versus time (output of match.flux)
 #                       chamber_volume = 24.5, # volume of the flux chamber in L, default for Three-D chamber (25x24.5x40cm)
@@ -489,7 +489,7 @@ flux.calc2 <- function(co2conc, # dataset of CO2 concentration versus time (outp
 
 
 
-fluxes2021 <- flux.calc2(co2_cut) %>% 
+fluxes2021 <- flux.calc3(co2_cut) %>% 
   mutate(
     PARavg = case_when(
       is.nan(PARavg) == TRUE ~ NA_real_, #mean(PAR) returned NaN when PAR was all NAs but it is missing values
