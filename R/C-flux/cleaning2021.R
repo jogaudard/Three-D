@@ -112,8 +112,8 @@ co2_cut <- co2_cut %>% mutate(
     fluxID == 24 & datetime %in% c(ymd_hms("2021-06-04T14:07:30"):ymd_hms("2021-06-04T14:07:50")) ~ "cut",
     fluxID == 25 & datetime %in% c(ymd_hms("2021-06-04T14:23:30"):ymd_hms("2021-06-04T14:23:50")) ~ "cut",
     fluxID == 26 & datetime %in% c(ymd_hms("2021-06-04T14:17:23"):ymd_hms("2021-06-04T14:17:30")) ~ "cut",
-    fluxID == 248 & datetime %in% c(ymd_hms("2021-06-22T14:19:45"):ymd_hms("2021-06-22T14:19:55")) ~ "cut",
-    fluxID == 988 & datetime %in% c(ymd_hms("2021-08-19T10:57:00"):ymd_hms("2021-08-19T10:57:20")) ~ "cut",
+    fluxID == 237 & datetime %in% c(ymd_hms("2021-06-22T14:19:45"):ymd_hms("2021-06-22T14:19:55")) ~ "cut",
+    fluxID == 944 & datetime %in% c(ymd_hms("2021-08-19T10:57:00"):ymd_hms("2021-08-19T10:57:20")) ~ "cut",
     fluxID == 1244 & datetime %in% c(ymd_hms("2021-09-08T14:06:30"):ymd_hms("2021-09-08T14:07:00")) ~ "cut",
     # fluxID ==  & datetime %in%  ~ "cut",
     # fluxID ==  & datetime %in%  ~ "cut",
@@ -132,23 +132,23 @@ co2_cut <- co2_cut %>% mutate(
 
 theme_set(theme_grey(base_size = 5)) 
 
-filter(co2_cut, campaign == 1) %>% #cleaned!
-  ggplot(aes(x = datetime, y = CO2, color = cut)) +
-  geom_line(size = 0.2, aes(group = fluxID)) +
-  scale_x_datetime(date_breaks = "1 min", minor_breaks = "10 sec", date_labels = "%e/%m \n %H:%M") +
-  # scale_x_date(date_labels = "%H:%M:%S") +
-  facet_wrap(vars(fluxID), ncol = 30, scales = "free") +
-  ggsave("threed_2021_detail_1.png", height = 40, width = 80, units = "cm")
+# filter(co2_cut, campaign == 1) %>% #cleaned
+#   ggplot(aes(x = datetime, y = CO2, color = cut)) +
+#   geom_line(size = 0.2, aes(group = fluxID)) +
+#   scale_x_datetime(date_breaks = "1 min", minor_breaks = "10 sec", date_labels = "%e/%m \n %H:%M") +
+#   # scale_x_date(date_labels = "%H:%M:%S") +
+#   facet_wrap(vars(fluxID), ncol = 30, scales = "free") +
+#   ggsave("threed_2021_detail_1.png", height = 40, width = 80, units = "cm")
 
-filter(co2_cut, campaign == 2) %>% #cleaned!
-  ggplot(aes(x = datetime, y = CO2, color = cut)) +
-  geom_line(size = 0.2, aes(group = fluxID)) +
-  scale_x_datetime(date_breaks = "1 min", minor_breaks = "10 sec", date_labels = "%e/%m \n %H:%M") +
-  # scale_x_date(date_labels = "%H:%M:%S") +
-  facet_wrap(vars(fluxID), ncol = 30, scales = "free") +
-  ggsave("threed_2021_detail_2.png", height = 40, width = 80, units = "cm")
+# filter(co2_cut, campaign == 2) %>% #cleaned
+#   ggplot(aes(x = datetime, y = CO2, color = cut)) +
+#   geom_line(size = 0.2, aes(group = fluxID)) +
+#   scale_x_datetime(date_breaks = "1 min", minor_breaks = "10 sec", date_labels = "%e/%m \n %H:%M") +
+#   # scale_x_date(date_labels = "%H:%M:%S") +
+#   facet_wrap(vars(fluxID), ncol = 30, scales = "free") +
+#   ggsave("threed_2021_detail_2.png", height = 40, width = 80, units = "cm")
 
-filter(co2_cut, campaign == 3) %>% #cleaned!
+filter(co2_cut, campaign == 3) %>% #clean
   ggplot(aes(x = datetime, y = CO2, color = cut)) +
   geom_line(size = 0.2, aes(group = fluxID)) +
   scale_x_datetime(date_breaks = "1 min", minor_breaks = "10 sec", date_labels = "%e/%m \n %H:%M") +
@@ -156,7 +156,7 @@ filter(co2_cut, campaign == 3) %>% #cleaned!
   facet_wrap(vars(fluxID), ncol = 30, scales = "free") +
   ggsave("threed_2021_detail_3.png", height = 40, width = 80, units = "cm")
 
-filter(co2_cut, campaign == 4) %>% #cleaned!
+filter(co2_cut, campaign == 4) %>% 
   ggplot(aes(x = datetime, y = CO2, color = cut)) +
   geom_line(size = 0.2, aes(group = fluxID)) +
   scale_x_datetime(date_breaks = "1 min", minor_breaks = "10 sec", date_labels = "%e/%m \n %H:%M") +
