@@ -114,7 +114,7 @@ co2_cut <- co2_cut %>% mutate(
     fluxID == 26 & datetime %in% c(ymd_hms("2021-06-04T14:17:23"):ymd_hms("2021-06-04T14:17:30")) ~ "cut",
     fluxID == 237 & datetime %in% c(ymd_hms("2021-06-22T14:19:45"):ymd_hms("2021-06-22T14:19:55")) ~ "cut",
     fluxID == 944 & datetime %in% c(ymd_hms("2021-08-19T10:57:00"):ymd_hms("2021-08-19T10:57:20")) ~ "cut",
-    fluxID == 1244 & datetime %in% c(ymd_hms("2021-09-08T14:06:30"):ymd_hms("2021-09-08T14:07:00")) ~ "cut",
+    fluxID == 1192 & datetime %in% c(ymd_hms("2021-09-08T14:06:30"):ymd_hms("2021-09-08T14:07:00")) ~ "cut",
     # fluxID ==  & datetime %in%  ~ "cut",
     # fluxID ==  & datetime %in%  ~ "cut",
     TRUE ~ "keep"
@@ -132,21 +132,21 @@ co2_cut <- co2_cut %>% mutate(
 
 theme_set(theme_grey(base_size = 5)) 
 
-# filter(co2_cut, campaign == 1) %>% #cleaned
-#   ggplot(aes(x = datetime, y = CO2, color = cut)) +
-#   geom_line(size = 0.2, aes(group = fluxID)) +
-#   scale_x_datetime(date_breaks = "1 min", minor_breaks = "10 sec", date_labels = "%e/%m \n %H:%M") +
-#   # scale_x_date(date_labels = "%H:%M:%S") +
-#   facet_wrap(vars(fluxID), ncol = 30, scales = "free") +
-#   ggsave("threed_2021_detail_1.png", height = 40, width = 80, units = "cm")
+filter(co2_cut, campaign == 1) %>% #cleaned
+  ggplot(aes(x = datetime, y = CO2, color = cut)) +
+  geom_line(size = 0.2, aes(group = fluxID)) +
+  scale_x_datetime(date_breaks = "1 min", minor_breaks = "10 sec", date_labels = "%e/%m \n %H:%M") +
+  # scale_x_date(date_labels = "%H:%M:%S") +
+  facet_wrap(vars(fluxID), ncol = 30, scales = "free") +
+  ggsave("threed_2021_detail_1.png", height = 40, width = 80, units = "cm")
 
-# filter(co2_cut, campaign == 2) %>% #cleaned
-#   ggplot(aes(x = datetime, y = CO2, color = cut)) +
-#   geom_line(size = 0.2, aes(group = fluxID)) +
-#   scale_x_datetime(date_breaks = "1 min", minor_breaks = "10 sec", date_labels = "%e/%m \n %H:%M") +
-#   # scale_x_date(date_labels = "%H:%M:%S") +
-#   facet_wrap(vars(fluxID), ncol = 30, scales = "free") +
-#   ggsave("threed_2021_detail_2.png", height = 40, width = 80, units = "cm")
+filter(co2_cut, campaign == 2) %>% #cleaned
+  ggplot(aes(x = datetime, y = CO2, color = cut)) +
+  geom_line(size = 0.2, aes(group = fluxID)) +
+  scale_x_datetime(date_breaks = "1 min", minor_breaks = "10 sec", date_labels = "%e/%m \n %H:%M") +
+  # scale_x_date(date_labels = "%H:%M:%S") +
+  facet_wrap(vars(fluxID), ncol = 30, scales = "free") +
+  ggsave("threed_2021_detail_2.png", height = 40, width = 80, units = "cm")
 
 filter(co2_cut, campaign == 3) %>% #clean
   ggplot(aes(x = datetime, y = CO2, color = cut)) +
@@ -156,7 +156,7 @@ filter(co2_cut, campaign == 3) %>% #clean
   facet_wrap(vars(fluxID), ncol = 30, scales = "free") +
   ggsave("threed_2021_detail_3.png", height = 40, width = 80, units = "cm")
 
-filter(co2_cut, campaign == 4) %>% 
+filter(co2_cut, campaign == 4) %>% #cleaned
   ggplot(aes(x = datetime, y = CO2, color = cut)) +
   geom_line(size = 0.2, aes(group = fluxID)) +
   scale_x_datetime(date_breaks = "1 min", minor_breaks = "10 sec", date_labels = "%e/%m \n %H:%M") +
@@ -269,8 +269,8 @@ co2_cut <- co2_cut %>%
   mutate(
     PAR = case_when(
       # type == "ER" ~ NA_real_, #no PAR for ecosystem respiration (but maybe I should keep it??)
-      type == "SoilR" ~ NA_real_, #no PAR with soil respiration, the sensor was somewhere else anyway
-      fluxID == 33 & datetime <= ymd_hms("2021-06-04T14:43:21") ~ NA_real_, # for when the sensor messed up because of the heat (should see a drop close to 0 or negative values)
+      # type == "SoilR" ~ NA_real_, #no PAR with soil respiration, the sensor was somewhere else anyway
+      fluxID == 32 & datetime <= ymd_hms("2021-06-04T14:43:21") ~ NA_real_, # for when the sensor messed up because of the heat (should see a drop close to 0 or negative values)
       # datetime %in% c(ymd_hms(""):ymd_hms("")), # for when the sensor messed up because of the heat (should see a drop close to 0 or negative values)
       fluxID %in% c(
         2,
@@ -278,42 +278,43 @@ co2_cut <- co2_cut %>%
         14,
         16,
         18,
-        31,
-        33,
-        39,
-        41,
-        57,
-        59,
-        69,
-        71,
-        74,
-        76,
-        89,
-        145,
-        147,
-        149,
-        378,
-        384,
-        400
+        30,
+        38,
+        40,
+        54,
+        56,
+        66,
+        68,
+        70,
+        72,
+        85,
+        139,
+        141,
+        143,
+        361,
+        367,
+        382
+        
       )
       
       ~ NA_real_,
       # fluxID == c(2, 6, 14, 16, 18, 31, 33, 39, 41, 57, 59, 69, 71, 74, 76, 89, 145, 147, 149) ~ NA_real_,
       # datetime %in% c(ymd_hms("2021-06-05T10:37:55"):ymd_hms("2021")) ~ NA_real_,
-      fluxID == 67 & datetime >= ymd_hms("2021-06-05T10:37:55") ~ NA_real_,
-      fluxID == 209 & datetime <= ymd_hms("2021-06-21T12:12:57") ~ NA_real_,
-      fluxID == 209 & datetime >= ymd_hms("2021-06-21T12:13:07") ~ NA_real_,
+      fluxID == 64 & datetime >= ymd_hms("2021-06-05T10:37:55") ~ NA_real_,
+      fluxID == 200 & datetime <= ymd_hms("2021-06-21T12:12:57") ~ NA_real_,
+      fluxID == 200 & datetime >= ymd_hms("2021-06-21T12:13:07") ~ NA_real_,
       datetime %in% c(ymd_hms("2021-06-23T14:36:20"):ymd_hms("2021-06-23T14:36:40")) ~ NA_real_,
-      fluxID == 289 & datetime <= ymd_hms("2021-06-23T14:45:35") ~ NA_real_,
-      fluxID == 289 & datetime >= ymd_hms("2021-06-23T14:46:00") ~ NA_real_,
-      datetime %in% c(ymd_hms("2021-06-23T14:46:50"):ymd_hms("2021-06-23T14:47:10")) ~ NA_real_,
-      fluxID == 730 & datetime <= ymd_hms("2021-08-16T16:22:50") ~ NA_real_,
-      fluxID == 937 & datetime >= ymd_hms("2021-08-19T16:00:30") ~ NA_real_,
-      fluxID == 943 & datetime <= ymd_hms("2021-08-19T16:09:50") ~ NA_real_,
-      fluxID == 1102 & datetime <= ymd_hms("2021-09-06T15:02:50") ~ NA_real_,
+      fluxID == 277 & datetime <= ymd_hms("2021-06-23T14:45:35") ~ NA_real_,
+      fluxID == 277 & datetime >= ymd_hms("2021-06-23T14:46:00") ~ NA_real_,
+      datetime %in% c(ymd_hms("2021-06-23T13:46:50"):ymd_hms("2021-06-23T13:47:10")) ~ NA_real_,
+      fluxID == 698 & datetime <= ymd_hms("2021-08-16T16:22:50") ~ NA_real_,
+      fluxID == 895 & datetime >= ymd_hms("2021-08-19T16:00:30") ~ NA_real_,
+      fluxID == 901 & datetime <= ymd_hms("2021-08-19T16:09:50") ~ NA_real_,
+      fluxID == 1054 & datetime <= ymd_hms("2021-09-06T15:02:50") ~ NA_real_,
       datetime %in% c(ymd_hms("2021-09-09T10:52:10"):ymd_hms("2021-09-09T10:53:20")) ~ NA_real_,
       type == "ER" & PAR <= 0 ~ 0, #close to 0 the logger can have some negative values but it is 0 in reality
-      fluxID == 1362 & datetime <= ymd_hms("2021-09-09T15:05:15") ~ NA_real_,
+      fluxID == 1301 & datetime <= ymd_hms("2021-09-09T15:05:15") ~ NA_real_,
+      fluxID == 82 & PAR <= 0 ~ 0, # negative values close to 0
       TRUE ~ as.numeric(PAR)
       )
   )
@@ -350,7 +351,7 @@ co2_cut <- co2_cut %>%
 
 
 # filter(co2_cut, campaign == 1) %>% 
-filter(co2_cut, type == "NEE") %>% #cleaned!
+filter(co2_cut, type == "NEE") %>% #cleaned
   ggplot(aes(x = datetime, y = PAR)) +
     geom_line(size = 0.2, aes(group = fluxID)) +
     scale_x_datetime(date_breaks = "1 min", minor_breaks = "10 sec", date_labels = "%e/%m \n %H:%M") +
@@ -365,6 +366,11 @@ filter(co2_cut, type == "ER") %>% #cleaned
   # scale_x_date(date_labels = "%H:%M:%S") +
   facet_wrap(vars(fluxID), ncol = 40, scales = "free") +
   ggsave("threed_2021_detail_PAR_ER.png", height = 40, width = 80, units = "cm")
+
+filter(co2_cut, type == "ER") %>% #faster than looking at the graph!
+  summarise(
+    rangePAR = range(PAR)
+  )
 
 filter(co2_cut, 
            type == "LRC1"
