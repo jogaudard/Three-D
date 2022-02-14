@@ -38,12 +38,29 @@ ggplot(lrc_flux, aes(x = PARavg, y = flux, color = turfID)) +
   # geom_smooth(method = "lm", se = FALSE)
   geom_smooth(method = "lm", formula = y ~ poly(x, 2), se = FALSE)
 
-#grouping per treatment instead of turfs
-ggplot(lrc_flux, aes(x = PARavg, y = flux, color = warming)) +
+#grouping per treatment instead of turf
+lrc_flux %>% mutate(
+  warming = str_replace_all(warming, c(
+    "W" = "Transplant",
+    "A" = "Ambient"
+  ))) %>% 
+ggplot(aes(x = PARavg, y = flux, color = warming)) +
   geom_point(size = 0.1) +
   facet_wrap(vars(campaign)) +
   # geom_smooth(method = "lm", se = FALSE)
-  geom_smooth(method = "lm", formula = y ~ poly(x, 2), se = FALSE)
+  geom_smooth(method = "lm", formula = y ~ poly(x, 2), se = FALSE) +
+  labs(
+    title = "Light response curves (Three-D, 2021)",
+    # caption = bquote(~CO[2]~'Flux standardized at PAR = 300 mol/'*m^2*'/s for NEE and PAR = 0 mol/'*m^2*'/s for ER, and soil temperature = 15 °C'),
+    color = "Warming",
+    x = bquote("PAR [mol/"*m^2*"/s]"),
+    y = bquote(~CO[2]~'flux [mmol/'*m^2*'/h]')
+  ) +
+  scale_fill_manual(values = c(
+    "Ambient" = "#1e90ff",
+    "Transplant" = "#ff0800"
+  )) +
+  ggsave("lrc.png", height = 10, width = 13, units = "cm")
 
 ggplot(lrc_flux, aes(x = PARavg, y = flux, color = warming)) +
   geom_point(size = 0.1) +
