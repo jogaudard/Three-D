@@ -5,11 +5,11 @@ source("R/Rgathering/create meta data.R")
 
 
 get_file(node = "pk4bg",
-         file = "Three-D_c-flux_2021_corrected.csv",
-         path = "data/C-Flux/summer_2021",
+         file = "Three-D_c-flux_2021.csv",
+         path = "data_cleaned/c-flux",
          remote_path = "C-Flux")
 
-flux <- read_csv("data/C-Flux/summer_2021/Three-D_c-flux_2021_corrected.csv") %>% 
+flux <- read_csv("data_cleaned/c-flux/Three-D_c-flux_2021.csv") %>% 
   mutate(
     corrected_flux = case_when( # discard data of low quality
       p.value <= 0.05 & r.squared >= 0.7 ~ corrected_flux,
@@ -18,7 +18,8 @@ flux <- read_csv("data/C-Flux/summer_2021/Three-D_c-flux_2021_corrected.csv") %>
     PAR_corrected_flux = case_when( # discard data of low quality
       p.value <= 0.05 & r.squared >= 0.7 ~ PAR_corrected_flux,
       p.value >= 0.05 & r.squared <= 0.7 ~ PAR_corrected_flux, #or should it be 0 in that case?
-    )
+    ),
+    date = date(datetime)
   ) %>% 
   filter(
     type == "NEE" |
@@ -187,13 +188,13 @@ ggplot(flux2021, aes(x = nitrogen, y = corrected_flux, color = warming)) +
 flux2021 %>% 
   filter(type == "ER") %>% 
   ggplot(aes(x = nitrogen, y = corrected_flux, color = warming, shape = site)) +
-  geom_point(size = 1) +
-  geom_smooth(method = "lm",
+  geom_point(size = 1.5) +
+  # geom_smooth(method = "lm",
               # formula = y ~ poly(x, 2),
-              se = FALSE, size = 0.5, fullrange = TRUE) +
+              # se = FALSE, size = 0.5, fullrange = TRUE) +
   facet_grid(vars(grazing), vars(campaign), scales = "fixed") +
   labs(
-    title = "Ecosystem respiration",
+    title = "Ecosystem respiration (Three-D, 2021)",
     caption = bquote(~CO[2]~'Flux standardized at PAR = 300 mol/'*m^2*'/s for NEE and PAR = 0 mol/'*m^2*'/s for ER, and soil temperature = 15 °C'),
     color = "Warming",
     x = "Nitrogen addition [kg/ha/y]",
@@ -204,15 +205,15 @@ flux2021 %>%
     "Transplant" = "#ff0800"
   )) +
   scale_x_continuous(trans = 'log10') +
-  ggsave("nitrogen_vs_ER_warming_fixedtemp.png", height = 20, width = 20, units = "cm")
+  ggsave("nitrogen_vs_ER_warming_fixedtemp.png", height = 20, width = 38, units = "cm")
        
 flux2021 %>% 
   filter(type == "NEE") %>% 
-  ggplot(aes(x = nitrogen, y = corrected_flux, color = warming)) +
+  ggplot(aes(x = nitrogen, y = corrected_flux, color = warming, shape = site)) +
   geom_point(size = 0.4) +
-  geom_smooth(method = "lm",
-              # formula = y ~ poly(x, 2),
-              se = FALSE, size = 0.5, fullrange = TRUE) +
+  # geom_smooth(method = "lm",
+  #             # formula = y ~ poly(x, 2),
+  #             se = FALSE, size = 0.5, fullrange = TRUE) +
   facet_grid(vars(grazing), vars(campaign), scales = "fixed") +
   labs(
     title = "Net ecosystem exchange",
@@ -229,14 +230,14 @@ flux2021 %>%
 
 flux2021 %>% 
   filter(type == "GEP") %>% 
-  ggplot(aes(x = nitrogen, y = corrected_flux, color = warming)) +
-  geom_point(size = 0.4) +
-  geom_smooth(method = "lm",
-              # formula = y ~ poly(x, 2),
-              se = FALSE, size = 0.5, fullrange = TRUE) +
+  ggplot(aes(x = nitrogen, y = corrected_flux, color = warming, shape = site)) +
+  geom_point(size = 1.5) +
+  # geom_smooth(method = "lm",
+  #             # formula = y ~ poly(x, 2),
+  #             se = FALSE, size = 0.5, fullrange = TRUE) +
   facet_grid(vars(grazing), vars(campaign), scales = "fixed") +
   labs(
-    title = "Gross ecosystem production",
+    title = "Gross ecosystem production (Three-D, 2021)",
     caption = bquote(~CO[2]~'Flux standardized at PAR = 300 mol/'*m^2*'/s for NEE and PAR = 0 mol/'*m^2*'/s for ER, and soil temperature = 15 °C'),
     color = "Warming",
     x = "Nitrogen addition [kg/ha/y]",
@@ -246,7 +247,8 @@ flux2021 %>%
     "Ambient" = "#1e90ff",
     "Transplant" = "#ff0800"
   )) +
-  ggsave("nitrogen_vs_GEP_warming_fixedtemp.png", height = 20, width = 20, units = "cm")
+  scale_x_continuous(trans = 'log10') +
+  ggsave("nitrogen_vs_GEP_warming_fixedtemp.png", height = 20, width = 38, units = "cm")
 
 flux2021 %>% 
   filter(
@@ -267,7 +269,11 @@ flux2021 %>%
     x = "Campaigns",
     y = bquote(~CO[2]~'flux [mmol/'*m^2*'/h]')
   ) +
-  ggsave("controlplotsflux.png", height = 20, width = 20, units = "cm")
+  scale_fill_manual(values = c(
+    "Ambient" = "#1e90ff",
+    "Transplant" = "#ff0800"
+  )) +
+  ggsave("controlplotsflux.png", height = 20, width = 38, units = "cm")
 
 #let's try to compare paired (transplant vs ambient) plots
 flux2021_delta <- flux2021 %>% 
@@ -315,3 +321,43 @@ ggplot(flux2021_slopes) +
   geom_boxplot(aes(x = type, y = slope_flux_nitrogen, color = grazing)) 
   facet_wrap(vars(campaign))
   
+flux2021 %>% 
+    # filter(type == "ER") %>% 
+    ggplot(aes(x = nitrogen, y = corrected_flux, color = warming)) +
+    geom_point(size = 1.5) +
+    # geom_smooth(method = "lm",
+    #             # formula = y ~ poly(x, 2),
+    #             se = FALSE, size = 0.5, fullrange = TRUE) +
+    facet_grid(vars(grazing), vars(type), scales = "fixed") +
+    labs(
+      title = "Ecosystem fluxes (Three-D, 2021)",
+      caption = bquote(~CO[2]~'Flux standardized at PAR = 300 mol/'*m^2*'/s for NEE and PAR = 0 mol/'*m^2*'/s for ER, and soil temperature = 15 °C'),
+      color = "Warming",
+      x = "Nitrogen addition [kg/ha/y]",
+      y = bquote(~CO[2]~'flux [mmol/'*m^2*'/h]')
+    ) +
+    scale_color_manual(values = c(
+      "Ambient" = "#1e90ff",
+      "Transplant" = "#ff0800"
+    )) +
+    scale_x_continuous(trans = 'log10')
+ 
+flux2021 %>% 
+  mutate(
+    campaign = as.factor(campaign)
+  ) %>% 
+  ggplot(aes(x = type, y = corrected_flux)) +
+  geom_boxplot(aes(fill = warming), position = "dodge") +
+  # geom_col(aes(fill = warming), position = "dodge")
+  # facet_wrap(vars(type), ncol = 3) +
+  labs(
+    title = "Warming treatment",
+    caption = bquote(~CO[2]~'Flux standardized at PAR = 300 mol/'*m^2*'/s for NEE and PAR = 0 mol/'*m^2*'/s for ER, and soil temperature = 15 °C'),
+    fill = "Warming",
+    # x = "Campaigns",
+    y = bquote(~CO[2]~'flux [mmol/'*m^2*'/h]')
+  ) +
+  scale_fill_manual(values = c(
+    "Ambient" = "#1e90ff",
+    "Transplant" = "#ff0800"
+  ))
