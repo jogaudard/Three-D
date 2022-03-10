@@ -361,3 +361,24 @@ flux2021 %>%
     "Ambient" = "#1e90ff",
     "Transplant" = "#ff0800"
   ))
+
+flux2021 %>% 
+  mutate(
+    type = as.factor(type),
+    campaign = as.factor(campaign),
+    warming = as.factor(warming)
+  ) %>% 
+  filter(
+    type != "NEE"
+  ) %>% 
+  ggplot(aes(x = nitrogen, y = corrected_flux, shape = warming, color = site)) +
+  geom_point(size = 1.5) +
+  scale_shape_manual(values = c(Ambient = 16, Transplant = 1)) +
+  # scale_linetype_manual(values = c(Ambient = "solid", Transplant = "dotted")) +
+  # scale_y_log10() +
+  scale_x_continuous(trans = 'log10') +
+  # geom_smooth(method = "lm",
+  #             # formula = y ~ poly(x, 2),
+  #             se = FALSE, size = 0.5, fullrange = FALSE) +
+  # facet_grid(rows = vars(site), cols = vars(grazing))
+  facet_grid(cols = vars(grazing), rows = vars(type))
