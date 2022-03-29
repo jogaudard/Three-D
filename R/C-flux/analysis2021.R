@@ -382,3 +382,156 @@ flux2021 %>%
   #             se = FALSE, size = 0.5, fullrange = FALSE) +
   # facet_grid(rows = vars(site), cols = vars(grazing))
   facet_grid(cols = vars(grazing), rows = vars(type))
+
+flux2021 %>% 
+  ggplot(aes(x = date, y = corrected_flux)) +
+  geom_point(aes(color = warming)) +
+  facet_grid(rows = vars(type))
+
+
+# temperature flux slope --------------------------------------------------
+
+flux2021_delta_flux <- flux2021 %>% 
+  select(type, campaign, site, block, grazing, nitrogen, pairID, warming, PAR_corrected_flux) %>% 
+  pivot_wider(names_from = "warming", values_from = "PAR_corrected_flux") %>% 
+  mutate(
+    delta_flux_PAR = Transplant - Ambient
+  ) %>% 
+  select(!c(Transplant, Ambient))
+
+flux2021_delta_temp <- flux2021 %>% 
+  select(type, campaign, site, block, grazing, nitrogen, pairID, warming, temp_soil) %>% 
+  pivot_wider(names_from = "warming", values_from = "temp_soil") %>% 
+  mutate(
+    delta_temp = Transplant - Ambient
+  ) %>% 
+  select(!c(Transplant, Ambient))
+
+flux2021_slopes_temp <- right_join(flux2021_delta_flux, flux2021_delta_temp, by = c("type", "campaign", "site", "block", "grazing", "nitrogen", "pairID")) %>% 
+  mutate(
+    slope = delta_flux_PAR / delta_temp
+  )
+
+
+flux2021_slopes_temp %>% 
+  ggplot(aes(x = campaign, y = slope)) +
+  geom_point(aes(color = site)) +
+  facet_grid(rows = vars(type))
+
+
+# figure for Aud ----------------------------------------------------------
+
+
+flux2021 %>% 
+  ggplot(aes(x = temp_soil, y = PAR_corrected_flux)) +
+  geom_point(aes(color = warming)) +
+  facet_grid(cols = vars(campaign), rows = vars(type))
+
+flux2021_delta %>% 
+  mutate(
+    campaign = as.factor(campaign)
+  ) %>% 
+  filter(type != "NEE") %>% 
+  ggplot() +
+  # geom_violin(aes(x = campaign, y = delta_flux, fill = type))
+  # geom_col(aes(x = campaign, y = delta_flux, fill = type), position = "dodge")
+  # geom_bar(position = "dodge") +
+  # stat_summary(fun = "mean", geom = "bar", position = "dodge") +
+  # stat_summary(fun.data = "mean_se", geom = "errorbar", width = 0.2)
+  geom_boxplot(aes(x = campaign, y = delta_flux, fill = type))
+
+flux2021 %>% 
+  mutate(
+    campaign = as.factor(campaign)
+  ) %>% 
+  filter(type != "NEE") %>% 
+  ggplot() +
+  geom_boxplot(aes(x = campaign, y = corrected_flux, fill = warming)) +
+  facet_grid(rows = vars(type))
+
+flux2021 %>% 
+  mutate(
+    campaign = as.factor(campaign)
+  ) %>% 
+  filter(type != "NEE") %>% 
+  ggplot() +
+  geom_boxplot(aes(x = type, y = corrected_flux, fill = warming))
+
+flux2021 %>% 
+  mutate(
+    warming = as.factor(warming)
+  ) %>%
+  filter(type == "ER") %>%
+  ggplot(aes(x = date, y = corrected_flux, color = warming)) +
+  geom_point() +
+  facet_grid(rows = vars(type)) +
+  geom_smooth(method = "lm",
+              formula = y ~ poly(x, 2),
+              se = FALSE, size = 0.5, fullrange = TRUE) +
+  scale_color_manual(values = c(
+    "Ambient" = "#1e90ff",
+    "Transplant" = "#ff0800"
+  )) +
+  facet_grid(rows = vars(site))
+
+flux2021 %>% 
+  mutate(
+    warming = as.factor(warming)
+  ) %>%
+  filter(type != "NEE") %>%
+  ggplot(aes(x = date, y = corrected_flux, color = warming)) +
+  geom_point() +
+  facet_grid(rows = vars(type)) +
+  geom_smooth(method = "lm",
+              formula = y ~ poly(x, 2),
+              se = TRUE, size = 0.5, fullrange = TRUE) +
+  scale_color_manual(values = c(
+    "Ambient" = "#1e90ff",
+    "Transplant" = "#ff0800"
+  )) +
+  labs(
+    title = "Warming treatment",
+    caption = bquote(~CO[2]~'flux standardized at PAR = 300 mol/'*m^2*'/s for NEE and PAR = 0 mol/'*m^2*'/s for ER, and soil temperature = 15 °C'),
+    color = "Warming",
+    x = "Date",
+    y = bquote(~CO[2]~'flux [mmol/'*m^2*'/h]')
+  )
+
+
+flux2021 %>% 
+  mutate(
+    warming = as.factor(warming),
+    site = str_replace(
+      site,
+      "Joasete",
+      "Sub-alpine"),
+    site = str_replace(
+      site,
+      "Liahovden",
+      "Alpine")
+  ) %>%
+  filter(type != "NEE") %>%
+  ggplot(aes(x = date, y = corrected_flux, color = warming, shape = site, linetype = site)) +
+  geom_point() +
+  facet_grid(rows = vars(type), scales = "free") +
+  geom_smooth(method = "lm",
+              formula = y ~ poly(x, 2),
+              se = TRUE, size = 0.5, fullrange = TRUE) +
+  scale_color_manual(values = c(
+    "Ambient" = "#1e90ff",
+    "Transplant" = "#ff0800"
+  )) +
+  scale_shape_manual(values = c(
+    "Sub-alpine" = 1,
+    "Alpine" = 16
+  )) +
+  geom_hline(yintercept=0, size = 0.3) +
+  labs(
+    title = "Warming treatments and sites",
+    caption = bquote(~CO[2]~'flux standardized at PAR = 300 mol/'*m^2*'/s for NEE and PAR = 0 mol/'*m^2*'/s for ER, and soil temperature = 15 °C'),
+    color = "Warming",
+    shape = "Site",
+    linetype = "Site",
+    x = "Date",
+    y = bquote(~CO[2]~'flux [mmol/'*m^2*'/h]')
+  )
