@@ -12,12 +12,15 @@ get_file(node = "pk4bg",
 flux <- read_csv("data_cleaned/c-flux/Three-D_c-flux_2021.csv") %>% 
   mutate(
     corrected_flux = case_when( # discard data of low quality
+      p.value <= 0.05 & r.squared < 0.7 ~ NA_real_,
       p.value <= 0.05 & r.squared >= 0.7 ~ corrected_flux,
-      p.value >= 0.05 & r.squared <= 0.7 ~ corrected_flux, #or should it be 0 in that case?
+      p.value > 0.05 & r.squared >= 0.7 ~ NA_real_,
+      p.value > 0.05 & r.squared < 0.7 ~ corrected_flux,
       ),
     PAR_corrected_flux = case_when( # discard data of low quality
-      p.value <= 0.05 & r.squared >= 0.7 ~ PAR_corrected_flux,
-      p.value >= 0.05 & r.squared <= 0.7 ~ PAR_corrected_flux, #or should it be 0 in that case?
+      p.value <= 0.05 & r.squared <= 0.7 ~ NA_real_,
+      p.value >= 0.05 & r.squared >= 0.7 ~ NA_real_, 
+    TRUE ~ PAR_corrected_flux
     ),
     date = date(datetime)
   ) %>% 
@@ -25,8 +28,9 @@ flux <- read_csv("data_cleaned/c-flux/Three-D_c-flux_2021.csv") %>%
     type == "NEE" |
       # type == "SoilR" |
       type == "ER" #we do not use the LRC data
-  ) %>% 
-  select(turfID, type, comments, date, temp_soilavg, campaign, PAR_corrected_flux, corrected_flux)
+  ) 
+s#%>% 
+  # select(turfID, type, comments, date, temp_soilavg, campaign, PAR_corrected_flux, corrected_flux)
   
 
 # GEP
@@ -129,14 +133,14 @@ ggplot(flux2021, aes(x = temp_soil, y = PAR_corrected_flux, color = grazing)) +
   geom_point(size = 0.4) +
   # geom_line(aes(group = pairID)) +
   geom_smooth(method = "lm", se = FALSE, size = 0.5, fullrange = TRUE) +
-  facet_grid(vars(type), vars(campaign), scales = "free") +
+  facet_grid(vars(type), vars(campaign), scales = "free")
   ggsave("temp_soil_vs_flux_grazing.png", height = 20, width = 20, units = "cm")
 
 ggplot(flux2021, aes(x = temp_soil, y = PAR_corrected_flux, color = nitrogen)) +
   geom_point(size = 0.4) +
   # geom_line(aes(group = pairID)) +
   geom_smooth(method = "lm", se = FALSE, size = 0.5, fullrange = TRUE) +
-  facet_grid(vars(type), vars(campaign), scales = "free") +
+  facet_grid(vars(type), vars(campaign), scales = "free")
   ggsave("temp_soil_vs_flux_nitrogen.png", height = 20, width = 20, units = "cm")
   
 ggplot(flux2021, aes(x = nitrogen, y = PAR_corrected_flux, color = warming)) +
@@ -145,7 +149,7 @@ ggplot(flux2021, aes(x = nitrogen, y = PAR_corrected_flux, color = warming)) +
   geom_smooth(method = "lm",
               # formula = y ~ poly(x, 2),
               se = FALSE, size = 0.5, fullrange = TRUE) +
-  facet_grid(vars(type), vars(campaign), scales = "free") +
+  facet_grid(vars(type), vars(campaign), scales = "free")
   ggsave("nitrogen_vs_flux_warming.png", height = 20, width = 20, units = "cm")
 
 
@@ -167,7 +171,7 @@ ggplot(flux2021, aes(x = nitrogen, y = corrected_flux, color = grazing)) +
     color = "Grazing treatment",
     x = "Nitrogen addition [kg/ha/y]",
     y = bquote(~CO[2]~'flux [mmol/'*m^2*'/h]')
-  ) +
+  )
   ggsave("nitrogen_vs_flux_grazing_fixedtemp2.png", height = 20, width = 20, units = "cm")
 
 ggplot(flux2021, aes(x = nitrogen, y = corrected_flux, color = warming)) +
@@ -182,7 +186,7 @@ ggplot(flux2021, aes(x = nitrogen, y = corrected_flux, color = warming)) +
     color = "Grazing treatment",
     x = "Nitrogen addition [kg/ha/y]",
     y = bquote(~CO[2]~'flux [mmol/'*m^2*'/h]')
-  ) +
+  )
   ggsave("nitrogen_vs_flux_warming_fixedtemp2.png", height = 20, width = 20, units = "cm")
 
 flux2021 %>% 
@@ -204,7 +208,7 @@ flux2021 %>%
     "Ambient" = "#1e90ff",
     "Transplant" = "#ff0800"
   )) +
-  scale_x_continuous(trans = 'log10') +
+  scale_x_continuous(trans = 'log10')
   ggsave("nitrogen_vs_ER_warming_fixedtemp.png", height = 20, width = 38, units = "cm")
        
 flux2021 %>% 
@@ -225,7 +229,7 @@ flux2021 %>%
   scale_color_manual(values = c(
     "Ambient" = "#1e90ff",
     "Transplant" = "#ff0800"
-  )) +
+  ))
   ggsave("nitrogen_vs_NEE_warming_fixedtemp.png", height = 20, width = 20, units = "cm")
 
 flux2021 %>% 
@@ -247,7 +251,8 @@ flux2021 %>%
     "Ambient" = "#1e90ff",
     "Transplant" = "#ff0800"
   )) +
-  scale_x_continuous(trans = 'log10') +
+  scale_x_continuous(trans = 'log10')
+
   ggsave("nitrogen_vs_GEP_warming_fixedtemp.png", height = 20, width = 38, units = "cm")
 
 flux2021 %>% 
@@ -272,7 +277,8 @@ flux2021 %>%
   scale_fill_manual(values = c(
     "Ambient" = "#1e90ff",
     "Transplant" = "#ff0800"
-  )) +
+  ))
+
   ggsave("controlplotsflux.png", height = 20, width = 38, units = "cm")
 
 #let's try to compare paired (transplant vs ambient) plots
@@ -537,3 +543,16 @@ flux2021 %>%
   )
 
 
+# model -------------------------------------------------------------------
+
+#looking at the distribution
+flux2021 %>% 
+  ggplot(aes(x=corrected_flux)) +
+  geom_histogram(binwidth = 1)
+
+flux2021 %>% 
+  filter(
+    type == "ER"
+  ) %>% 
+  ggplot(aes(x=corrected_flux)) +
+  geom_histogram(binwidth = 1)
