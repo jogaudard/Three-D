@@ -28,9 +28,8 @@ flux <- read_csv("data_cleaned/c-flux/Three-D_c-flux_2021.csv") %>%
     type == "NEE" |
       # type == "SoilR" |
       type == "ER" #we do not use the LRC data
-  ) 
-s#%>% 
-  # select(turfID, type, comments, date, temp_soilavg, campaign, PAR_corrected_flux, corrected_flux)
+  ) %>% 
+  select(turfID, type, comments, date, temp_soilavg, campaign, PAR_corrected_flux, corrected_flux)
   
 
 # GEP
