@@ -16,8 +16,6 @@ source("R/Rgathering/create meta data.R")
 flux <- read_csv("data_cleaned/c-flux/Three-D_c-flux_2021_cleaned.csv")
 
 
-
-
 #adding meta data
 flux <- left_join(flux, metaTurfID, by = "turfID")
 
@@ -59,7 +57,7 @@ ggplot(aes(x = PARavg, y = flux, color = warming)) +
   scale_fill_manual(values = c(
     "Ambient" = "#1e90ff",
     "Transplant" = "#ff0800"
-  )) +
+  ))
   ggsave("lrc.png", height = 10, width = 13, units = "cm")
 
 ggplot(lrc_flux, aes(x = PARavg, y = flux, color = warming)) +
@@ -196,4 +194,8 @@ flux_corrected %>%
 
 write_csv(flux_corrected, "data_cleaned/c-flux/Three-D_c-flux_2021.csv")
 
-
+flux_corrected %>% filter(type == "ER") %>% 
+  summarise(
+    rangeER = range(PAR_corrected_flux, na.rm = TRUE)
+  )
+  
