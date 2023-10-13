@@ -8,7 +8,8 @@ my_packages <- c("dataDownloader",
                  "broom",
                  "zoo",
                  "hms",
-                 "GoFluxYourself"
+                 "GoFluxYourself",
+                 "filesstrings"
                  )
 
 lapply(my_packages, library, character.only = TRUE) 
@@ -33,4 +34,25 @@ if(file.exists(zipFile)){
   unzip(zipFile, exdir = outDir)
 }
 
-# splitting data  and attributing IDs
+file.remove(zipFile) # let's free some space
+
+location <- "data/C-Flux/summer_2020/rawData"
+CO2_files <- list.files(location, pattern = "*CO2*", full.names = TRUE)
+
+move_files(CO2_files, "data/C-Flux/summer_2020/rawData/CO2")
+
+
+# from exemple
+file.path <- system.file("extdata", "LGR/example_LGR.txt", package = "GoFluxYourself")
+example_LGR_imp <- LGR_import(inputfile = file.path)
+
+aux.path <- system.file("extdata", "LGR/example_LGR_aux.txt", 
+                        package = "GoFluxYourself")
+auxfile <- read.delim(aux.path) %>% 
+  mutate(start.time = as.POSIXct(start.time, tz = "UTC"))
+
+  example_LGR_ow <- obs.win(inputfile = example_LGR_imp, auxfile = auxfile,
+                          obs.length = 180, shoulder = 30)
+# splitting data  and attributing IDs -----
+
+data <- import2RData()
