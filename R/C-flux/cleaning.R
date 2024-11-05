@@ -31,19 +31,18 @@ if(file.exists(zipFile)){
 
 location <- "data/C-Flux/summer_2020/rawData" #location of datafiles
 #import all squirrel files and select date/time and CO2_calc columns, merge them, name it fluxes
-fluxes <-
-  dir_ls(location, regexp = "*CO2*") %>% 
+fluxes <- dir_ls(location, regexp = "*CO2*") %>% 
   map_dfr(read_csv,  na = c("#N/A", "Over")) %>% 
-  rename(CO2 = "CO2 (ppm)") %>%  #rename the column to get something more practical without space
+  rename(conc = "CO2 (ppm)") %>%  #rename the column to get something more practical without space
   mutate(
     date = dmy(Date), #convert date in POSIXct
     datetime = as_datetime(paste(date, Time))  #paste date and time in one column
     ) %>%
-  select(datetime,CO2)
+  drop_na(conc) |>
+  select(datetime, conc)
 
 #import date/time and PAR columns from PAR file
-PAR <-
-  list.files(path = location, pattern = "*PAR*", full.names = T) %>% 
+PAR <- list.files(path = location, pattern = "*PAR*", full.names = TRUE) %>% 
   map_df(~read_table2(., "", na = c("NA"), col_names = paste0("V",seq_len(12)))) %>% #need that because logger is adding columns with useless information
   rename(date = V2, time = V3, PAR = V4) %>% 
   mutate(
@@ -51,16 +50,19 @@ PAR <-
     datetime = paste(date, time),
     datetime = ymd_hms(datetime)
     ) %>% 
+  drop_na(PAR) |>
   select(datetime, PAR)
+
 
 #import date/time and value column from iButton file
 
-temp_air <-dir_ls(location, regexp = "*temp*") %>% 
+temp_air <- dir_ls(location, regexp = "*temp*") %>%
   map_dfr(read_csv,  na = c("#N/A"), skip = 20, col_names = c("datetime", "unit", "temp_value", "temp_dec"), col_types = "ccnn") %>%
   mutate(temp_dec = replace_na(temp_dec,0),
     temp_air = temp_value + temp_dec/1000, #because stupid iButtons use comma as delimiter AND as decimal point
     datetime = dmy_hms(datetime)
     ) %>% 
+  drop_na(temp_air) |>
   select(datetime, temp_air)
 
 
@@ -71,6 +73,8 @@ conc2020 <- fluxes %>%
   left_join(PAR, by = "datetime") %>% 
   left_join(temp_air, by = "datetime")
 
+
+
 #import the record file
 
 record2020 <- read_csv("data/C-Flux/summer_2020/Three-D_field-record_2020.csv", na = c(""), col_types = "ccntDfc") %>% 
@@ -78,10 +82,14 @@ record2020 <- read_csv("data/C-Flux/summer_2020/Three-D_field-record_2020.csv", 
   mutate(
     start = ymd_hms(paste(date, starting_time)) #converting the date as posixct, pasting date and starting time together
   ) %>% 
-  rename(plot_ID = turf_ID)
-
+  rename(plot_ID = turf_ID) |>
+  distinct(start, .keep_all = TRUE) # some replicates were also marked as LRC and that is not correct
+view(record2020)
 
 
 # match 2020 concentration df
+# we should match later because it is going to create a mess with duplicated fluxID
 
+conc2020 <- flux_match(conc2020, record2020)
 
+# 2021 data
