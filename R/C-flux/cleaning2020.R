@@ -69,7 +69,7 @@ temp_air <- dir_ls(location, regexp = "*temp*") %>%
 #join the df
 
 
-conc2020 <- fluxes %>% 
+conc_raw <- fluxes %>% 
   left_join(PAR, by = "datetime") %>% 
   left_join(temp_air, by = "datetime")
 
@@ -84,12 +84,27 @@ record2020 <- read_csv("data/C-Flux/summer_2020/Three-D_field-record_2020.csv", 
   ) %>% 
   rename(plot_ID = turf_ID) |>
   distinct(start, .keep_all = TRUE) # some replicates were also marked as LRC and that is not correct
-view(record2020)
 
+# matching
 
-# match 2020 concentration df
-# we should match later because it is going to create a mess with duplicated fluxID
+conc2020 <- flux_match(conc_raw, record2020, startcrop = 20)
 
-conc2020 <- flux_match(conc2020, record2020)
+slopes_exp_2020 <- flux_fitting(
+    conc_df = conc2020,
+    fit_type = "exp",
+    # start_cut = 20,
+    end_cut = 40
+    )
 
-# 2021 data
+slopes_exp_2020_flag <- flux_quality(
+  slopes_df = slopes_exp_2020,
+  error = 150
+  )
+
+flux_plot(
+  slopes_exp_2020_flag,
+  print_plot = "FALSE",
+  output = "pdf",
+  f_plotname = "plot_2020",
+  f_ylim_lower = 300
+)
