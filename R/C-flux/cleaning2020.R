@@ -87,18 +87,27 @@ record2020 <- read_csv("data/C-Flux/summer_2020/Three-D_field-record_2020.csv", 
 
 # matching
 
-conc2020 <- flux_match(conc_raw, record2020, startcrop = 20)
+conc2020 <- flux_match(
+  conc_raw,
+  record2020,
+  measurement_length = 120 # 2020 was 2 minutes
+  # startcrop = 20
+  )
 
 slopes_exp_2020 <- flux_fitting(
     conc_df = conc2020,
-    fit_type = "exp",
+    fit_type = "exp"
     # start_cut = 20,
-    end_cut = 40
+    # end_cut = 60
     )
 
 slopes_exp_2020_flag <- flux_quality(
   slopes_df = slopes_exp_2020,
-  error = 150
+  error = 150, #there were some calibration issues, leading to the instrument being off in absolute values
+  weird_fluxes_id = c(
+    55, # slope going opposite direction as flux
+    118 # influence from disturbance at the start
+  )
   )
 
 flux_plot(
@@ -106,5 +115,5 @@ flux_plot(
   print_plot = "FALSE",
   output = "pdf",
   f_plotname = "plot_2020",
-  f_ylim_lower = 300
+  f_ylim_lower = 250
 )
