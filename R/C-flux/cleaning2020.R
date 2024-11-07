@@ -110,6 +110,8 @@ slopes_exp_2020_flag <- flux_quality(
   )
   )
 
+str(slopes_exp_2020_flag)
+
 flux_plot(
   slopes_exp_2020_flag,
   print_plot = "FALSE",
@@ -117,3 +119,61 @@ flux_plot(
   f_plotname = "plot_2020",
   f_ylim_lower = 250
 )
+
+# calculations
+
+fluxes2020 <- flux_calc(
+  slopes_exp_2020_flag,
+  slope_col = "f_slope_corr",
+  conc_unit = "ppm",
+  flux_unit = "mmol",
+  cols_keep = c(
+    "plot_ID",
+    "type",
+    "replicate",
+    "campaign",
+    "remarks",
+    "f_flag_match",
+    "f_quality_flag"
+  ),
+  cols_ave = c(
+    "PAR"
+  )
+)
+
+str(fluxes2020)
+
+# let's just compare with what was done previously
+
+get_file(node = "pk4bg",
+         file = "Three-D_c-flux_2020.csv",
+         path = "data_cleaned/c-flux",
+         remote_path = "C-Flux")
+
+old_fluxes2020 <- read_csv("data_cleaned/c-flux/Three-D_c-flux_2020.csv")
+
+old_fluxes2020 <- old_fluxes2020 |>
+  rename(
+    old_flux = "flux",
+    old_PAR = "PARavg",
+    old_tempair = "temp_airavg"
+  )
+
+str(old_fluxes2020)
+
+all_fluxes <- full_join(
+  fluxes2020,
+  old_fluxes2020,
+  by = c( # we do not use datetime because the cut might be different
+    "plot_ID" = "turfID",
+    "type",
+    "campaign",
+    "replicate"
+  )
+)
+
+str(all_fluxes)
+
+ggplot(all_fluxes, aes(old_flux, flux)) +
+geom_point() +
+geom_abline(slope = 1)
