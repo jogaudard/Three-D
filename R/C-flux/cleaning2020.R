@@ -145,12 +145,9 @@ str(fluxes2020)
 
 # let's just compare with what was done previously
 
-get_file(node = "pk4bg",
-         file = "Three-D_c-flux_2020.csv",
-         path = "data_cleaned/c-flux",
-         remote_path = "C-Flux")
 
-old_fluxes2020 <- read_csv("data_cleaned/c-flux/Three-D_c-flux_2020.csv")
+
+old_fluxes2020 <- read_csv("data_cleaned/c-flux/Three-D_c-flux_2020_version_2022-02-09.csv")
 
 old_fluxes2020 <- old_fluxes2020 |>
   rename(
@@ -178,3 +175,5 @@ ggplot(all_fluxes, aes(old_flux, flux, label = f_fluxID)) +
 geom_point() +
 geom_text() +
 geom_abline(slope = 1)
+
+write_csv(fluxes2020, "data_cleaned/c-flux/Three-D_c-flux_2020.csv")
