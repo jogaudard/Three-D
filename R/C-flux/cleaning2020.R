@@ -174,6 +174,7 @@ all_fluxes <- full_join(
 
 str(all_fluxes)
 
-ggplot(all_fluxes, aes(old_flux, flux)) +
+ggplot(all_fluxes, aes(old_flux, flux, label = f_fluxID)) +
 geom_point() +
+geom_text() +
 geom_abline(slope = 1)
