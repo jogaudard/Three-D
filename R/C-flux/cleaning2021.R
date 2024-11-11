@@ -70,6 +70,24 @@ conc <- flux_match(
 
 str(conc)
 
+# fitting fluxes
+
+slopes_exp_2021 <- flux_fitting(
+  conc_df = conc,
+  fit_type = "exp"
+)
+
+slopes_exp_2021_flag <- flux_quality(
+  slopes_exp_2021
+)
+
+flux_plot(
+  slopes_exp_2021_flag,
+  print_plot = "FALSE",
+  output = "pdf",
+  f_plotname = "plot_2021"
+  )
+
 #need to clean PAR, temp_air, temp_soil
 
 #put NA for when the soil temp sensor was not pluged in
