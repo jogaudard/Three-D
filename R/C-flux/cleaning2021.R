@@ -59,7 +59,8 @@ record <- read_csv("data/c-flux/summer_2021/Three-D_field-record_2021.csv", na =
     # end = start + measurement, #creating column End
     # start_window = start + startcrop, #cropping the start
     # end_window = end - endcrop #cropping the end of the measurement
-  ) 
+  )  |>
+  distinct(start, .keep_all = TRUE) # some replicates were also marked as LRC and that is not correct
 
 #matching the CO2 concentration data with the turfs using the field record
 conc <- flux_match(
@@ -74,18 +75,31 @@ str(conc)
 
 slopes_exp_2021 <- flux_fitting(
   conc_df = conc,
-  fit_type = "exp"
+  fit_type = "exp",
+  end_cut = 30
 )
 
 slopes_exp_2021_flag <- flux_quality(
-  slopes_exp_2021
+  slopes_exp_2021,
+  error = 400, # the gas analyser was off but the slope is ok
+  force_ok_id = c(
+    198 # looks ok despite b above threshold
+  ),
+  weird_fluxes_id = c(
+    402, # slope is off
+    403, # slope is off
+    409, # slope is off
+    562, # slope in opposite direction
+    985 # slope is off
+  )
 )
 
 flux_plot(
   slopes_exp_2021_flag,
   print_plot = "FALSE",
   output = "pdf",
-  f_plotname = "plot_2021"
+  f_plotname = "plot_2021",
+  f_ylim_lower = 300
   )
 
 #need to clean PAR, temp_air, temp_soil
