@@ -390,6 +390,8 @@ geom_point() +
 geom_text() +
 geom_abline(slope = 1)
 
+str(fluxes2021)
+
 write_csv(fluxes2021, "data_cleaned/c-flux/Three-D_c-flux_2021_cleaned.csv")
 
 
