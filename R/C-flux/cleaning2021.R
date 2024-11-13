@@ -355,8 +355,38 @@ fluxes2021 <- left_join(fluxes2021, soiltemp_ER) %>%
   ) %>% 
   select(!c(soiltemp_roll_NEE, soiltemp_roll_ER))
 
+# let's compare
 
+old_fluxes2021 <- read_csv("data_cleaned/c-flux/Three-D_c-flux_2021_cleaned_old.csv") |>
+  mutate(
+    campaign = as_factor(campaign)
+  )
 
+old_fluxes2021 <- old_fluxes2021 |>
+  rename(
+    old_flux = "flux",
+    old_PAR = "PARavg",
+    old_tempair = "temp_airavg"
+  )
+
+str(old_fluxes2021)
+
+all_fluxes <- full_join(
+  fluxes2021,
+  old_fluxes2021,
+  by = c( # we do not use datetime because the cut might be different
+    "turfID",
+    "type",
+    "campaign"
+    )
+)
+
+str(all_fluxes)
+
+ggplot(all_fluxes, aes(old_flux, flux, label = f_fluxID)) +
+geom_point() +
+geom_text() +
+geom_abline(slope = 1)
 
 # write_csv(fluxes2021, "data_cleaned/c-flux/Three-D_c-flux_2021_cleaned.csv")
 
