@@ -11,25 +11,25 @@ source("R/Load packages.R")
 
 
 #download and unzip files from OSF
-get_file(node = "pk4bg",
-         file = "Three-D_cflux_2021.zip",
-         path = "data/c-flux/summer_2021",
-         remote_path = "RawData/C-Flux")
+# get_file(node = "pk4bg",
+#          file = "Three-D_cflux_2021.zip",
+#          path = "data/c-flux/summer_2021",
+#          remote_path = "RawData/C-Flux")
 
-get_file(node = "pk4bg",
-         file = "Three-D_field-record_2021.csv",
-         path = "data/c-flux/summer_2021",
-         remote_path = "RawData/C-Flux")
+# get_file(node = "pk4bg",
+#          file = "Three-D_field-record_2021.csv",
+#          path = "data/c-flux/summer_2021",
+#          remote_path = "RawData/C-Flux")
 
-get_file(node = "pk4bg",
-         file = "Three-D_cutting_2021.csv",
-         path = "data/c-flux/summer_2021",
-         remote_path = "RawData/C-Flux")
+# get_file(node = "pk4bg",
+#          file = "Three-D_cutting_2021.csv",
+#          path = "data/c-flux/summer_2021",
+#          remote_path = "RawData/C-Flux")
 
-get_file(node = "pk4bg",
-         file = "Three-D_soilR-chambers-size.csv",
-         path = "data/c-flux/summer_2021",
-         remote_path = "RawData/C-Flux")
+# get_file(node = "pk4bg",
+#          file = "Three-D_soilR-chambers-size.csv",
+#          path = "data/c-flux/summer_2021",
+#          remote_path = "RawData/C-Flux")
 
 
 soilR_chamber <- read_csv("data/c-flux/summer_2021/Three-D_soilR-chambers-size.csv") |>
@@ -392,7 +392,7 @@ geom_abline(slope = 1)
 
 str(fluxes2021)
 
-write_csv(fluxes2021, "data_cleaned/c-flux/Three-D_c-flux_2021.csv")
+write_csv(fluxes2021, "data_cleaned/c-flux/Three-D_c-flux_2021_cleaned.csv")
 
 
 # fluxes quality ----------------------------------------------------------

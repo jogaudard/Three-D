@@ -30,7 +30,7 @@ lrc_flux <- flux %>%
     )
 
 #graph each light response curves
-ggplot(lrc_flux, aes(x = PARavg, y = flux, color = turfID)) +
+ggplot(lrc_flux, aes(x = PAR, y = flux, color = turfID)) +
   geom_point(size = 0.1) +
   facet_wrap(vars(campaign)) +
   # geom_smooth(method = "lm", se = FALSE)
@@ -42,7 +42,7 @@ lrc_flux %>% mutate(
     "W" = "Transplant",
     "A" = "Ambient"
   ))) %>% 
-ggplot(aes(x = PARavg, y = flux, color = warming)) +
+ggplot(aes(x = PAR, y = flux, color = warming)) +
   geom_point(size = 0.1) +
   facet_wrap(vars(campaign)) +
   # geom_smooth(method = "lm", se = FALSE)
@@ -60,7 +60,7 @@ ggplot(aes(x = PARavg, y = flux, color = warming)) +
   ))
   ggsave("lrc.png", height = 10, width = 13, units = "cm")
 
-ggplot(lrc_flux, aes(x = PARavg, y = flux, color = warming)) +
+ggplot(lrc_flux, aes(x = PAR, y = flux, color = warming)) +
   geom_point(size = 0.1) +
   # facet_wrap(vars(campaign)) +
   # geom_smooth(method = "lm", se = FALSE)
@@ -71,24 +71,22 @@ ggplot(lrc_flux, aes(x = PARavg, y = flux, color = warming)) +
 coefficients_lrc <- lrc_flux %>%
   group_by(warming, campaign) %>% 
   nest %>% 
-  mutate(lm = map(data, ~ lm(flux ~ PARavg + I(PARavg^2), data = .x)),
+  mutate(lm = map(data, ~ lm(flux ~ PAR + I(PAR^2), data = .x)),
          table = map(lm, tidy),
          table = map(table, select, term, estimate),
          table = map(table, pivot_wider, names_from = term, values_from = estimate)
          
   ) %>% 
   unnest(table) %>% 
-  select(warming, `(Intercept)`, PARavg, `I(PARavg^2)`, campaign) %>% 
+  select(warming, `(Intercept)`, PAR, `I(PAR^2)`, campaign) %>% 
   rename(
     origin = "(Intercept)",
-    a = "I(PARavg^2)",
-    b = "PARavg"
+    a = "I(PAR^2)",
+    b = "PAR"
   )
 
 
-#what I want to do: predict flux at PAR = 1000, given the origin
 #origini is calculated with coefficients from the model and flux and PAR value of specific flux
-# corrected_flux = flux + a (1000^2 - PAR^2) + b (1000 - PAR)
 
 PARfix <- 300 #PAR value at which we want the corrected flux to be for NEE
 PARnull <- 0 #PAR value for ER
@@ -98,8 +96,8 @@ flux_corrected_PAR <- flux %>%
   mutate(
     PAR_corrected_flux = 
       case_when( #we correct only the NEE
-        type == "NEE" ~ flux + a * (PARfix^2 - PARavg^2) + b * (PARfix - PARavg),
-        type == "ER" ~ flux + a * (PARnull^2 - PARavg^2) + b * (PARnull - PARavg)
+        type == "NEE" ~ flux + a * (PARfix^2 - PAR^2) + b * (PARfix - PAR),
+        type == "ER" ~ flux + a * (PARnull^2 - PAR^2) + b * (PARnull - PAR)
       )
     # delta_flux = flux - corrected_flux
   )# %>% 
@@ -113,7 +111,7 @@ flux_corrected_PAR <- flux %>%
 filter(flux_corrected_PAR,
        type == "ER" |
          type == "NEE") %>% 
-ggplot(aes(x = temp_soilavg, y = PAR_corrected_flux
+ggplot(aes(x = temp_soil, y = PAR_corrected_flux
                            , color = type
                            )) +
   geom_point() +
@@ -123,7 +121,7 @@ ggplot(aes(x = temp_soilavg, y = PAR_corrected_flux
 filter(flux_corrected_PAR,
        type == "ER" |
          type == "NEE") %>%
-  ggplot(aes(x = temp_soilavg, y = PAR_corrected_flux
+  ggplot(aes(x = temp_soil, y = PAR_corrected_flux
              # , color = type
              )) +
   geom_point() +
@@ -136,18 +134,18 @@ coefficients_soiltemp <- filter(flux_corrected_PAR,
                                 ) %>%
   group_by(warming, campaign) %>% 
   nest %>% 
-  mutate(lm = map(data, ~ lm(PAR_corrected_flux ~ temp_soilavg + I(temp_soilavg^2), data = .x)),
+  mutate(lm = map(data, ~ lm(PAR_corrected_flux ~ temp_soil + I(temp_soil^2), data = .x)),
          table = map(lm, tidy),
          table = map(table, select, term, estimate),
          table = map(table, pivot_wider, names_from = term, values_from = estimate)
          
   ) %>% 
   unnest(table) %>% 
-  select(warming, `(Intercept)`, temp_soilavg, `I(temp_soilavg^2)`, campaign) %>% 
+  select(warming, `(Intercept)`, temp_soil, `I(temp_soil^2)`, campaign) %>% 
   rename(
     origin2 = "(Intercept)",
-    c = "I(temp_soilavg^2)",
-    d = "temp_soilavg"
+    c = "I(temp_soil^2)",
+    d = "temp_soil"
   )
 
 soiltempfix <- 15
@@ -155,7 +153,7 @@ flux_corrected <- flux_corrected_PAR %>%
   left_join(coefficients_soiltemp, by = c("warming", "campaign")) %>% 
   mutate(
     corrected_flux =
-      PAR_corrected_flux + c * (soiltempfix^2 - temp_soilavg^2) + d * (soiltempfix - temp_soilavg),
+      PAR_corrected_flux + c * (soiltempfix^2 - temp_soil^2) + d * (soiltempfix - temp_soil),
       
     delta_flux = flux - corrected_flux
   ) %>% 
@@ -188,6 +186,16 @@ flux_corrected %>%
         | type == "ER"
       ) %>%
   ggplot(aes(x = flux, y = corrected_flux, color = warming)) +
+  geom_point() +
+  geom_smooth(method = "lm", formula = y ~ poly(x, 2), se = FALSE) +
+  facet_grid(vars(type), vars(campaign))
+
+flux_corrected_PAR %>% 
+  filter( #removing LRC now that we used them
+        type == "NEE"
+        | type == "ER"
+      ) %>%
+  ggplot(aes(x = flux, y = PAR_corrected_flux, color = warming)) +
   geom_point() +
   geom_smooth(method = "lm", formula = y ~ poly(x, 2), se = FALSE) +
   facet_grid(vars(type), vars(campaign))
