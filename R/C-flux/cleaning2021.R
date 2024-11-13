@@ -392,7 +392,7 @@ geom_abline(slope = 1)
 
 str(fluxes2021)
 
-write_csv(fluxes2021, "data_cleaned/c-flux/Three-D_c-flux_2021_cleaned.csv")
+write_csv(fluxes2021, "data_cleaned/c-flux/Three-D_c-flux_2021.csv")
 
 
 # fluxes quality ----------------------------------------------------------
