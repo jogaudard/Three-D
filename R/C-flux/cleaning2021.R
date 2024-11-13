@@ -96,13 +96,14 @@ slopes_exp_2021_flag <- flux_quality(
   )
 )
 
-flux_plot(
-  slopes_exp_2021_flag,
-  print_plot = "FALSE",
-  output = "pdf",
-  f_plotname = "plot_2021",
-  f_ylim_lower = 300
-  )
+# flux_plot is time consuming so we keep it as comments to avoid running accidentally
+# flux_plot(
+#   slopes_exp_2021_flag,
+#   print_plot = "FALSE",
+#   output = "pdf",
+#   f_plotname = "plot_2021",
+#   f_ylim_lower = 300
+#   )
 
 #need to clean PAR, temp_air, temp_soil
 
@@ -118,8 +119,7 @@ slopes_exp_2021_flag <- slopes_exp_2021_flag %>%
   )
 
 
-
-
+str(slopes_exp_2021_flag)
 
 
 #PAR: same + NA for soilR and ER
@@ -129,114 +129,29 @@ slopes_exp_2021_flag <- slopes_exp_2021_flag |>
     PAR =
       case_when(
         type == "ER" & PAR < 0 ~ 0,
-        type %in% c("LRC1", "LRC2", "LRC3", "LRC4", "LRC5") & PAR < 0 ~ 0,
+        type == "LRC5" & PAR > 10 ~ NA_real_, # PAR sensor had faulty contact
+        type == "LRC5" & PAR < 0 ~ 0, # when covering chamber after strong light, sensor can go negative but it is 0
         type == "ER" & PAR > 10 ~ NA_real_,
         type == "NEE" & PAR < 70 ~ NA_real_, # PAR sensor had faulty contact
+        type == "SoilR" ~ NA_real_, # no PAR data collected when doing soil respiration, but sensor connected
         TRUE ~ PAR
       )
   )
 
-# slopes_exp_2021_flag <- slopes_exp_2021_flag %>% 
-#   mutate(
-#     PAR = case_when(
-#       # type == "ER" ~ NA_real_, #no PAR for ecosystem respiration (but maybe I should keep it??)
-#       # type == "SoilR" ~ NA_real_, #no PAR with soil respiration, the sensor was somewhere else anyway
-#       f_fluxID == 32 & f_datetime <= ymd_hms("2021-06-04T14:43:21") ~ NA_real_, # for when the sensor messed up because of the heat (should see a drop close to 0 or negative values)
-#       # datetime %in% c(ymd_hms(""):ymd_hms("")), # for when the sensor messed up because of the heat (should see a drop close to 0 or negative values)
-#       f_fluxID %in% c(
-#         2,
-#         6,
-#         14,
-#         16,
-#         18,
-#         30,
-#         38,
-#         40,
-#         54,
-#         56,
-#         66,
-#         68,
-#         70,
-#         72,
-#         85,
-#         139,
-#         141,
-#         143,
-#         361,
-#         367,
-#         382
-        
-#       )
-      
-#       ~ NA_real_,
-#       # fluxID == c(2, 6, 14, 16, 18, 31, 33, 39, 41, 57, 59, 69, 71, 74, 76, 89, 145, 147, 149) ~ NA_real_,
-#       # datetime %in% c(ymd_hms("2021-06-05T10:37:55"):ymd_hms("2021")) ~ NA_real_,
-#       f_fluxID == 64 & f_datetime >= ymd_hms("2021-06-05T10:37:55") ~ NA_real_,
-#       f_fluxID == 200 & f_datetime <= ymd_hms("2021-06-21T12:12:57") ~ NA_real_,
-#       f_fluxID == 200 & f_datetime >= ymd_hms("2021-06-21T12:13:07") ~ NA_real_,
-#       f_datetime %in% c(ymd_hms("2021-06-23T14:36:20"):ymd_hms("2021-06-23T14:36:40")) ~ NA_real_,
-#       f_fluxID == 277 & f_datetime <= ymd_hms("2021-06-23T14:45:35") ~ NA_real_,
-#       f_fluxID == 277 & f_datetime >= ymd_hms("2021-06-23T14:46:00") ~ NA_real_,
-#       f_datetime %in% c(ymd_hms("2021-06-23T13:46:50"):ymd_hms("2021-06-23T13:47:10")) ~ NA_real_,
-#       f_fluxID == 698 & f_datetime <= ymd_hms("2021-08-16T16:22:50") ~ NA_real_,
-#       f_fluxID == 895 & f_datetime >= ymd_hms("2021-08-19T16:00:30") ~ NA_real_,
-#       f_fluxID == 901 & f_datetime <= ymd_hms("2021-08-19T16:09:50") ~ NA_real_,
-#       f_fluxID == 1054 & f_datetime <= ymd_hms("2021-09-06T15:02:50") ~ NA_real_,
-#       f_datetime %in% c(ymd_hms("2021-09-09T10:52:10"):ymd_hms("2021-09-09T10:53:20")) ~ NA_real_,
-#       type == "ER" & PAR <= 0 ~ 0, #close to 0 the logger can have some negative values but it is 0 in reality
-#       f_fluxID == 1301 & f_datetime <= ymd_hms("2021-09-09T15:05:15") ~ NA_real_,
-#       f_fluxID == 82 & PAR <= 0 ~ 0, # negative values close to 0
-#       f_datetime %in% c(ymd_hms("2021-06-04T10:29:40"):ymd_hms("2021-06-04T10:29:52")) ~ NA_real_,
-#       f_datetime %in% c(ymd_hms("2021-06-21T12:33:40"):ymd_hms("2021-06-21T12:33:50")) ~ NA_real_,
-#       TRUE ~ as.numeric(PAR)
-#       )
-#   )
-
-#replacing PAR Na by 2h before/after average
-# roll_period <- 1
-# 
-# PAR_ER <- filter(co2_cut, type == "ER") %>% 
-#   slide_period_dfr(
-#     # .,
-#     .$datetime,
-#     "hour",
-#     .every = roll_period,
-#     ~data.frame(
-#       datetime = max(.x$datetime),
-#       PAR_roll = mean(.x$PAR, na.rm = TRUE)
-#     )
-#   )
-# 
-# PAR_NEE <- filter(co2_cut, type == "NEE") %>% 
-#   slide_period_dfr(
-#     # .,
-#     .$datetime,
-#     "hour",
-#     .every = roll_period,
-#     ~data.frame(
-#       datetime = max(.x$datetime),
-#       PAR_roll = mean(.x$PAR, na.rm = TRUE)
-#     )
-#   )
-# 
-# 
-# co2_cut <- left_join(co2_cut, PAR_ER)
 
 
-# filter(co2_cut, campaign == 1) %>% 
-
-plot_PAR <- function(slope_df, filename){
-
-plot <- filter(slope_df) %>%
-# plot_NEE_PAR <- filter(slopes_exp_2021_flag, type == "NEE" & f_fluxID %in% c(1:29)) %>%
+plot_PAR <- function(slope_df, filter, filename, scale){
+plot <- filter(slope_df, type == ((filter))) %>%
   ggplot(aes(x = f_datetime)) +
-    geom_point(size = 0.2, aes(group = f_fluxID, y = PAR)) +
+    geom_point(size = 0.2, aes(group = f_fluxID, y = PAR, color = f_cut)) +
     scale_x_datetime(date_breaks = "1 min", minor_breaks = "10 sec", date_labels = "%e/%m \n %H:%M") +
-    # scale_x_date(date_labels = "%H:%M:%S") +
-    # facet_wrap(vars(f_fluxID), ncol = 40, scales = "free") +
     do.call(facet_wrap_paginate,
-      args = c(facets = ~f_fluxID, ncol = 5, nrow = 3, scales = "free")
-    )
+      args = c(facets = ~f_fluxID, ncol = 5, nrow = 3, scales = ((scale)))
+    ) +
+    scale_color_manual(values = c(
+      "cut" = "#D55E00",
+      "keep" = "#009E73"
+    ))
 
     pdf(((filename)), paper = "a4r", width = 11.7, height = 8.3)
 
@@ -256,7 +171,7 @@ plot <- filter(slope_df) %>%
           args = c(
             facets = ~f_fluxID,
             page = i,
-            ncol = 5, nrow = 3, scales = "free"
+            ncol = 5, nrow = 3, scales = ((scale))
           )
         ))
     }
@@ -264,11 +179,14 @@ plot <- filter(slope_df) %>%
 
 }
 
-plot_PAR(slopes_exp_2021_flag, filter = "NEE", "plot_NEE_PAR.pdf")
-plot_PAR(slopes_exp_2021_flag, filter = "ER", "plot_ER_PAR.pdf")
-slopes_exp_2021_flag |>
-  filter(type %in% c("LRC1", "LRC2", "LRC3", "LRC4", "LRC5")) |>
-  plot_PAR("plot_LRC_PAR.pdf")
+plot_PAR(slopes_exp_2021_flag, "NEE", "plot_NEE_PAR.pdf", "free")
+plot_PAR(slopes_exp_2021_flag, "ER", "plot_ER_PAR.pdf", "free")
+plot_PAR(slopes_exp_2021_flag, "LRC1", "plot_LRC1_PAR.pdf", "free")
+plot_PAR(slopes_exp_2021_flag, "LRC2", "plot_LRC2_PAR.pdf", "free")
+plot_PAR(slopes_exp_2021_flag, "LRC3", "plot_LRC3_PAR.pdf", "free")
+plot_PAR(slopes_exp_2021_flag, "LRC4", "plot_LRC4_PAR.pdf", "free")
+plot_PAR(slopes_exp_2021_flag, "LRC5", "plot_LRC5_PAR.pdf", "free")
+
 
 
 # filter(co2_cut, type == "ER") %>% #cleaned
