@@ -231,53 +231,16 @@ fluxes2021 <- flux_calc(
   )
 )
 
-
-fluxes2021 <- flux.calc3(co2_cut_clean) %>% 
+fluxes2021 <- fluxes2021 |>
   mutate(
-    PARavg = case_when(
-      is.nan(PARavg) == TRUE ~ NA_real_, #mean(PAR) returned NaN when PAR was all NAs but it is missing values
-      TRUE ~ as.numeric(PARavg)
+    PAR = case_when(
+      is.nan(PAR) == TRUE ~ NA_real_, #mean(PAR) returned NaN when PAR was all NAs but it is missing values
+      TRUE ~ as.numeric(PAR)
     )
   )
 
-p = 0.01
-R2 = 0.7
+str(fluxes2021)
 
-flux_to_check <- fluxes2021 %>% filter(
-  (type == "ER" & flux <= 0)
-  | (p.value > p  & adj.r.squared < R2 & type == "NEE")
-  | (p.value > p  & adj.r.squared < R2 & type == "ER")
-  | (p.value <= p & adj.r.squared < R2)
-) %>% 
-  select(fluxID) %>% 
-  deframe()
-
-co2_cut %>% filter(
-  fluxID %in% flux_to_check
-) %>% 
-  ggplot(aes(x = datetime, y = CO2, color = cut)) +
-    geom_line(size = 0.2, aes(group = fluxID)) +
-    scale_x_datetime(date_breaks = "1 min", minor_breaks = "10 sec", date_labels = "%e/%m \n %H:%M") +
-    # scale_x_date(date_labels = "%H:%M:%S") +
-    facet_wrap(vars(fluxID), ncol = 20, scales = "free")
-
-fluxes2021 <- fluxes2021 %>% 
-  mutate(
-    flux = case_when( # discard data of low quality
-      type == "ER" & flux < 0 ~ NA_real_,
-      p.value > p  & adj.r.squared < R2 & type == "NEE" ~ 0,
-      p.value > p  & adj.r.squared < R2 & type == "ER" ~ NA_real_,
-      p.value <= p & adj.r.squared < R2 ~ NA_real_,
-      p.value > p & adj.r.squared >= R2 ~ flux,
-      p.value <= p & adj.r.squared >= R2 ~ flux
-      # TRUE ~ corrected_flux
-    )
-  )
-
-fluxes2021 %>% filter(type == "ER") %>% 
-  summarise(
-    rangeER = range(flux, na.rm = TRUE)
-  )
 
   
 #replacing PAR Na by the average PAR of the 3h period in which the measurement is
@@ -291,7 +254,7 @@ PAR_ER <- filter(fluxes2021, type == "ER") %>%
     .every = roll_period,
     ~data.frame(
       datetime = max(.x$datetime),
-      PAR_roll_ER = mean(.x$PARavg, na.rm = TRUE)
+      PAR_roll_ER = mean(.x$PAR, na.rm = TRUE)
     )
   )
 
@@ -303,7 +266,7 @@ PAR_NEE <- filter(fluxes2021, type == "NEE") %>%
     .every = roll_period,
     ~data.frame(
       datetime = max(.x$datetime),
-      PAR_roll_NEE = mean(.x$PARavg, na.rm = TRUE)
+      PAR_roll_NEE = mean(.x$PAR, na.rm = TRUE)
     )
   )
 
@@ -315,34 +278,26 @@ fluxes2021 <- left_join(fluxes2021, PAR_ER) %>%
   fill(PAR_roll_ER, .direction = "up") %>% 
   mutate(
     comments = case_when(
-      is.na(PARavg) == TRUE
+      is.na(PAR) == TRUE
       # & type == ("ER" | "NEE")
       ~ paste0(comments,  ";", " PAR 3h period average"),
       TRUE ~ comments
     ),
     comments = str_replace_all(comments, "NA; ", ""),
-    PARavg = case_when(
-      is.na(PARavg) == TRUE
+    PAR = case_when(
+      is.na(PAR) == TRUE
       & type == "ER"
       ~ PAR_roll_ER,
-      is.na(PARavg) == TRUE
+      is.na(PAR) == TRUE
       & type == "NEE"
       ~ PAR_roll_NEE,
-      TRUE ~ PARavg
+      TRUE ~ PAR
     )
-      # replace_na(PARavg,
-      #                   case_when(
-      #                     type == "ER" ~ PAR_roll_ER,
-      #                     type == "NEE" ~ PAR_roll_NEE
-      #                   )
-      #                   )
+
     
   ) %>% 
   select(!c(PAR_roll_NEE, PAR_roll_ER))
-  # rename(
-  #   date_time = datetime,
-  #   turfID = turf_ID
-  # )
+  
 
 #replace soil temp Na with average of measurements in the same 3h period
 # roll_period <- 3
@@ -355,7 +310,7 @@ soiltemp_ER <- filter(fluxes2021, type == "ER") %>%
     .every = roll_period,
     ~data.frame(
       datetime = max(.x$datetime),
-      soiltemp_roll_ER = mean(.x$temp_soilavg, na.rm = TRUE)
+      soiltemp_roll_ER = mean(.x$temp_soil, na.rm = TRUE)
     )
   )
 
@@ -367,7 +322,7 @@ soiltemp_NEE <- filter(fluxes2021, type == "NEE") %>%
     .every = roll_period,
     ~data.frame(
       datetime = max(.x$datetime),
-      soiltemp_roll_NEE = mean(.x$temp_soilavg, na.rm = TRUE)
+      soiltemp_roll_NEE = mean(.x$temp_soil, na.rm = TRUE)
     )
   )
 
@@ -379,39 +334,31 @@ fluxes2021 <- left_join(fluxes2021, soiltemp_ER) %>%
   fill(soiltemp_roll_ER, .direction = "up") %>% 
   mutate(
     comments = case_when(
-      is.na(temp_soilavg) == TRUE
+      is.na(temp_soil) == TRUE
       # & type != "SoilR"
       # & type == ("ER" | "NEE")
       ~ paste0(comments,  ";", " soil temp 3h period average"),
       TRUE ~ comments
     ),
     comments = str_replace_all(comments, "NA; ", ""),
-    temp_soilavg = case_when(
-      is.na(temp_soilavg) == TRUE
+    temp_soil = case_when(
+      is.na(temp_soil) == TRUE
       & type == "ER"
       ~ soiltemp_roll_ER,
-      is.na(temp_soilavg) == TRUE
+      is.na(temp_soil) == TRUE
       & type == "NEE"
       ~ soiltemp_roll_NEE,
-      TRUE ~ temp_soilavg
+      TRUE ~ temp_soil
     )
-    # replace_na(PARavg,
-    #                   case_when(
-    #                     type == "ER" ~ PAR_roll_ER,
-    #                     type == "NEE" ~ PAR_roll_NEE
-    #                   )
-    #                   )
+
     
   ) %>% 
   select(!c(soiltemp_roll_NEE, soiltemp_roll_ER))
-# rename(
-#   date_time = datetime,
-#   turfID = turf_ID
-# )
 
 
 
-write_csv(fluxes2021, "data_cleaned/c-flux/Three-D_c-flux_2021_cleaned.csv")
+
+# write_csv(fluxes2021, "data_cleaned/c-flux/Three-D_c-flux_2021_cleaned.csv")
 
 
 # fluxes quality ----------------------------------------------------------
