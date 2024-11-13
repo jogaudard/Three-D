@@ -104,6 +104,7 @@ slopes_exp_2021_flag <- flux_quality(
     403, # slope is off
     409, # slope is off
     562, # slope in opposite direction
+    570, # small bump at start setting the slope wrong
     985 # slope is off
   )
 )
@@ -191,13 +192,14 @@ plot <- filter(slope_df, type == ((filter))) %>%
 
 }
 
-plot_PAR(slopes_exp_2021_flag, "NEE", "plot_NEE_PAR.pdf", "free")
-plot_PAR(slopes_exp_2021_flag, "ER", "plot_ER_PAR.pdf", "free")
-plot_PAR(slopes_exp_2021_flag, "LRC1", "plot_LRC1_PAR.pdf", "free")
-plot_PAR(slopes_exp_2021_flag, "LRC2", "plot_LRC2_PAR.pdf", "free")
-plot_PAR(slopes_exp_2021_flag, "LRC3", "plot_LRC3_PAR.pdf", "free")
-plot_PAR(slopes_exp_2021_flag, "LRC4", "plot_LRC4_PAR.pdf", "free")
-plot_PAR(slopes_exp_2021_flag, "LRC5", "plot_LRC5_PAR.pdf", "free")
+# passing plots as comment to save time
+# plot_PAR(slopes_exp_2021_flag, "NEE", "plot_NEE_PAR.pdf", "free")
+# plot_PAR(slopes_exp_2021_flag, "ER", "plot_ER_PAR.pdf", "free")
+# plot_PAR(slopes_exp_2021_flag, "LRC1", "plot_LRC1_PAR.pdf", "free")
+# plot_PAR(slopes_exp_2021_flag, "LRC2", "plot_LRC2_PAR.pdf", "free")
+# plot_PAR(slopes_exp_2021_flag, "LRC3", "plot_LRC3_PAR.pdf", "free")
+# plot_PAR(slopes_exp_2021_flag, "LRC4", "plot_LRC4_PAR.pdf", "free")
+# plot_PAR(slopes_exp_2021_flag, "LRC5", "plot_LRC5_PAR.pdf", "free")
 
 # we need to include soil respiration chamber volume
 slopes_2021 <- left_join(slopes_exp_2021_flag, soilR_chamber) |>
@@ -388,7 +390,7 @@ geom_point() +
 geom_text() +
 geom_abline(slope = 1)
 
-# write_csv(fluxes2021, "data_cleaned/c-flux/Three-D_c-flux_2021_cleaned.csv")
+write_csv(fluxes2021, "data_cleaned/c-flux/Three-D_c-flux_2021_cleaned.csv")
 
 
 # fluxes quality ----------------------------------------------------------
