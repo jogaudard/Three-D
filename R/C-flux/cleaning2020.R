@@ -112,13 +112,14 @@ slopes_exp_2020_flag <- flux_quality(
 
 str(slopes_exp_2020_flag)
 
-flux_plot(
-  slopes_exp_2020_flag,
-  print_plot = "FALSE",
-  output = "pdf",
-  f_plotname = "plot_2020",
-  f_ylim_lower = 250
-)
+# we keep flux plot as comments because it takes quite long to run
+# flux_plot(
+#   slopes_exp_2020_flag,
+#   print_plot = "FALSE",
+#   output = "pdf",
+#   f_plotname = "plot_2020",
+#   f_ylim_lower = 250
+# )
 
 # calculations
 
@@ -176,4 +177,8 @@ geom_point() +
 geom_text() +
 geom_abline(slope = 1)
 
-write_csv(fluxes2020, "data_cleaned/c-flux/Three-D_c-flux_2020.csv")
+count(fluxes2020, type)
+
+
+
+# write_csv(fluxes2020, "data_cleaned/c-flux/Three-D_c-flux_2020.csv")
