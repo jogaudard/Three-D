@@ -206,4 +206,5 @@ flux_corrected %>% filter(type == "ER") %>%
   summarise(
     rangeER = range(PAR_corrected_flux, na.rm = TRUE)
   )
-  
+
+# now we can calculate GEP  

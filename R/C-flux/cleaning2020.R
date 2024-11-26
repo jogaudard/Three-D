@@ -179,6 +179,18 @@ geom_abline(slope = 1)
 
 count(fluxes2020, type)
 
+# calculating GEP
 
+fluxes2020 <- fluxes2020 |>
+  flux_gep(
+    id_cols = c("plot_ID", "campaign", "replicate"),
+    flux_col = "flux",
+    type_col = "type",
+    datetime_col = "datetime",
+    par_col = "PAR",
+    cols_keep = c("remarks", "f_quality_flag", "atm_pressure", "plot_area", "temp_air_ave", "volume_setup", "model")
+  )
+
+View(fluxes2020)
 
 # write_csv(fluxes2020, "data_cleaned/c-flux/Three-D_c-flux_2020.csv")
