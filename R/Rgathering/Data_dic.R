@@ -202,7 +202,9 @@ soil_dic <- map_df(soil %>% as_tibble, class) %>%
 ### C-FLUX
 
 # read in data
-cflux <- read_csv("data_cleaned/c-flux/Three-D_c-flux_2020.csv")
+cflux2020 <- read_csv("data_cleaned/c-flux/Three-D_c-flux_2020.csv")
+cflux2021 <- read_csv("data_cleaned/c-flux/Three-D_c-flux_2020.csv")
+cflux <- bind_rows(cflux2020, cflux2021)
 
 range_cflux <- cflux %>% 
   summarise(
@@ -218,9 +220,9 @@ cflux_dic <- map_df(cflux %>% as_tibble, class) %>%
   mutate(`Variable type` = case_when(`Variable type` == "character" ~ "categorical",
                                      !`Variable type` %in% c("integer", "numeric", "character") ~ "date",
                                      `Variable type` %in% c("integer", "numeric") ~ "numeric")) %>% 
-  left_join(range_cflux, by = "Variable name") %>% 
+  left_join(range_cflux, by = `Variable name`) %>% 
   left_join(attribute_table, by = c("Variable name" = "attribute"))
-
+View(cflux_dic)
 
 #***********************************************************************************************
 ### CLIMATE - TOMST

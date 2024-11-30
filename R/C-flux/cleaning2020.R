@@ -181,7 +181,7 @@ count(fluxes2020, type)
 
 # calculating GEP
 
-fluxes2020 <- fluxes2020 |>
+fluxes2020gep <- fluxes2020 |>
   flux_gep(
     id_cols = c("plot_ID", "campaign", "replicate"),
     flux_col = "flux",
@@ -189,14 +189,15 @@ fluxes2020 <- fluxes2020 |>
     datetime_col = "datetime",
     par_col = "PAR",
     cols_keep = c("remarks", "f_quality_flag", "atm_pressure", "plot_area", "temp_air_ave", "volume_setup", "model")
-  )
+  ) |>
+  select(!c(f_fluxID, f_flag_match, f_slope_calc, chamber_volume, tube_volume))
 
-# View(fluxes2020)
+str(fluxes2020gep)
 
 # let's just plot it to check
-fluxes2020 |>
+fluxes2020gep |>
   # filter # let's keep the LRC just to see if how they look like
   ggplot(aes(x = type, y = flux)) +
   geom_violin()
 
-write_csv(fluxes2020, "data_cleaned/c-flux/Three-D_c-flux_2020.csv")
+write_csv(fluxes2020gep, "data_cleaned/c-flux/Three-D_c-flux_2020.csv")

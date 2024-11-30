@@ -249,8 +249,8 @@ fluxes2021 <- flux_corrected_PAR |>
       )
   ) |>
   select(!c(origin, a, b, f_fluxID, f_slope_calc, chamber_volume, tube_volume))
-
-# View(fluxes2021)
+  
+str(fluxes2021)
 
 # let's just plot it to check
 fluxes2021 |>
