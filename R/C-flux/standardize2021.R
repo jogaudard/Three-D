@@ -97,7 +97,15 @@ flux_corrected_PAR <- flux %>%
     PAR_corrected_flux = 
       case_when( #we correct only the NEE
         type == "NEE" ~ flux + a * (PARfix^2 - PAR^2) + b * (PARfix - PAR),
-        type == "ER" ~ flux + a * (PARnull^2 - PAR^2) + b * (PARnull - PAR)
+        type == "ER" ~ flux + a * (PARnull^2 - PAR^2) + b * (PARnull - PAR),
+        type %in% c(
+          "SoilR",
+          "LRC1",
+          "LRC2",
+          "LRC3",
+          "LRC4",
+          "LRC5"
+        ) ~ flux
       )
     # delta_flux = flux - corrected_flux
   )# %>% 
@@ -200,11 +208,55 @@ flux_corrected_PAR %>%
   geom_smooth(method = "lm", formula = y ~ poly(x, 2), se = FALSE) +
   facet_grid(vars(type), vars(campaign))
 
-write_csv(flux_corrected, "data_cleaned/c-flux/Three-D_c-flux_2021.csv")
+# write_csv(flux_corrected, "data_cleaned/c-flux/Three-D_c-flux_2021.csv")
 
 flux_corrected %>% filter(type == "ER") %>% 
   summarise(
     rangeER = range(PAR_corrected_flux, na.rm = TRUE)
   )
 
-# now we can calculate GEP  
+# now we can calculate GEP
+
+str(flux_corrected_PAR)
+# View(flux_corrected_PAR)
+
+fluxes2021 <- flux_corrected_PAR |>
+  select(!flux) |> # we need to remove the flux col because there is a flux col created by flux_gep
+  flux_gep(
+    id_cols = c("turfID", "campaign"),
+    flux_col = "PAR_corrected_flux",
+    type_col = "type",
+    datetime_col = "datetime",
+    par_col = "PAR",
+    cols_keep = c(
+      "temp_soil",
+      "comments",
+      "f_quality_flag",
+      "atm_pressure",
+      "plot_area",
+      "temp_air_ave",
+      "volume_setup",
+      "model",
+      "origSiteID",
+      "origBlockID",
+      "warming",
+      "grazing",
+      "Nlevel",
+      "origPlotID",
+      "destSiteID",
+      "destPlotID",
+      "destBlockID"
+      )
+  ) |>
+  select(!c(origin, a, b, f_fluxID, f_slope_calc, chamber_volume, tube_volume))
+
+# View(fluxes2021)
+
+# let's just plot it to check
+fluxes2021 |>
+  # filter # let's keep the LRC just to see if how they look like
+  ggplot(aes(x = type, y = flux)) +
+  geom_violin()
+
+
+write_csv(fluxes2021, "data_cleaned/c-flux/Three-D_c-flux_2021.csv")

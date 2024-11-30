@@ -199,4 +199,4 @@ fluxes2020 |>
   ggplot(aes(x = type, y = flux)) +
   geom_violin()
 
-# write_csv(fluxes2020, "data_cleaned/c-flux/Three-D_c-flux_2020.csv")
+write_csv(fluxes2020, "data_cleaned/c-flux/Three-D_c-flux_2020.csv")
