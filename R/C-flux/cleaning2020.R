@@ -191,6 +191,12 @@ fluxes2020 <- fluxes2020 |>
     cols_keep = c("remarks", "f_quality_flag", "atm_pressure", "plot_area", "temp_air_ave", "volume_setup", "model")
   )
 
-View(fluxes2020)
+# View(fluxes2020)
+
+# let's just plot it to check
+fluxes2020 |>
+  # filter # let's keep the LRC just to see if how they look like
+  ggplot(aes(x = type, y = flux)) +
+  geom_violin()
 
 # write_csv(fluxes2020, "data_cleaned/c-flux/Three-D_c-flux_2020.csv")
