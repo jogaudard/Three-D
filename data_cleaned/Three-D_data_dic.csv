@@ -27,7 +27,7 @@ layer,Moss layer,Moss or vegetation layer,defined
 height,numeric value,Average height of the vascular vegetation or moss in the plot,measured
 ndvi,numeric value,NDVI measured per plot,measured
 measurement,1 or 2,First or second measurement per plot,defined
-campaign,01.Apr,Campgain connected to carbon flux measurements,defined
+campaign,01.Apr,Campaign connected to carbon flux measurements,defined
 timing,before treatment,Timing of measurement in relation to cutting treatment,defined
 month,01.Dec,Month of observation,defined
 day,Jan.31,Day of observaiton,defined
@@ -35,7 +35,7 @@ variable,temperture,Climate logger,defined
 value,numeric value,Value for climate data,measured
 unit,°C,Unit of variable,defined
 ID,5612,Unique logger value,defined
-date_time,yyyy-mm-dd_hh:mm:ss,Date and time of observation,defined
+datetime,yyyy-mm-dd_hh:mm:ss,Date and time of observation,defined
 time_zone,4,Time zone,defined
 shake,202,Shake,defined
 error_flag,0 or 1,Flag for error of logger,defined
