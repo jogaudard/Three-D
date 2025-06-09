@@ -314,10 +314,11 @@ analysis_plan <- list(
       tar_target(
         name = cflux_analysis2020,
         command = {
-          cflux_2020_ER <- cflux2020_clean |>
-            filter(type == "ER")
-
-          model_ER <- lm(f_flux ~ warming + origSiteID, cflux_2020_ER)
+          cflux2020_clean |>
+            summarise(
+              .by = c(type, destSiteID, warming),
+              mean_flux = mean(f_flux, na.rm = TRUE)
+            )
         }
       )
   
