@@ -315,9 +315,33 @@ analysis_plan <- list(
         name = cflux_analysis2020,
         command = {
           cflux2020_clean |>
+            filter(
+              type %in% c("ER", "NEE", "GPP")
+            ) |>
             summarise(
-              .by = c(type, destSiteID, warming),
+              .by = c(type, origSiteID, warming),
               mean_flux = mean(f_flux, na.rm = TRUE)
+            ) |>
+            pivot_wider(names_from = warming, values_from = mean_flux) |>
+            mutate(
+              increase = (W - A) / abs(A)
+            )
+        }
+      ),
+      tar_target(
+        name = cflux_analysis2021,
+        command = {
+          cflux2021_clean |>
+            filter(
+              type %in% c("ER", "NEE", "GPP")
+            ) |>
+            summarise(
+              .by = c(type, origSiteID, warming),
+              mean_flux = mean(f_flux, na.rm = TRUE)
+            ) |>
+            pivot_wider(names_from = warming, values_from = mean_flux) |>
+            mutate(
+              increase = (W - A) / abs(A)
             )
         }
       )
